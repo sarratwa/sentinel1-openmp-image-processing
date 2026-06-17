@@ -36,10 +36,6 @@ Es werden folgende Vergleichsvarianten betrachtet:
 ## Ergebnisse:
 
 Die folgenden Abbildungen werden später ergänzt:
-
-Originalbild -> Gefiltertes Bild -> Benchmark-Diagramme
-
-Die folgenden Abbildungen werden später ergänzt:
 - Vergleich zwischen Originalbild und gefiltertem Bild
 - Laufzeitdiagramm in Abhängigkeit von der Thread-Anzahl
 - Speedup-Diagramm
@@ -59,9 +55,9 @@ Die folgenden Abbildungen werden später ergänzt:
 ### Scheduling-Vergleich
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
 | ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
-| Laptop 1 | xxx | xxx | xxx | 8 | static | xxx s |
-| Laptop 1 | xxx | xxx | xxx | 8 | dynamic | xxx s |
-| Laptop 1 | xxx | xxx | xxx | 8 | guided | xxx s |
+| Laptop 1 | xxx | xxx | 8 | static | xxx s |
+| Laptop 1 | xxx | xxx | 8 | dynamic | xxx s |
+| Laptop 1 | xxx | xxx | 8 | guided | xxx s |
 
 ## Interpretation
 
@@ -91,20 +87,21 @@ git clone url
 cd 
 ```
 C/OpenMP-Programm kompilieren:
-
+- 1. 
 ```bash
 make
 ```
-Oder 
+- 2. Oder 
 Das Programm kann direkt mit GCC kompiliert werden:
 
 ```bash
-gcc ... (in bearbeitung)
+# in bearbeitung
+```
 
 Beispielaufruf:
 
 ```bash
-in bearbeitung
+# in bearbeitung
 ```
 Plots erzeugen:
 
