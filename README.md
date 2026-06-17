@@ -24,15 +24,14 @@ Die Hauptbenchmarks sollen auf einem festen System durchgeführt werden, damit d
 | ------ | --------- | --- |
 | 1 | Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz, 8 Kerne, 16 logische Prozessoren | 32.0 GB |
 
-Es werden x Varianten verglichen werden:
-
+Es werden 3 Hauptvarianten verglichen werden:
 
 | Variante | Name                 | Aufgabe                                   |
 | -------- | ----------------------- | ------------------------------------------- |
 | 1        | Baseline / CPU      |  ohne Parallelisierung       |
 | 2        | OpenMP parallel for |  Parallelisierung der äußeren Bildschleife, z. B. zeilenweise Verarbeitung |
 | 3        | OpenMP Scheduling-Vergleich |  Vergleich von `static`, `dynamic` und `guided` für die parallele Bildschleifez             |
-| 2        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten |
+| 4        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten |
 
 ## Ergebnisse:
 
