@@ -37,11 +37,7 @@ Es werden 3 Hauptvarianten verglichen werden:
 
 Die folgenden Abbildungen werden später ergänzt:
 
-Originalbild
-        ↓
-Gefiltertes Bild
-        ↓
-Benchmark-Diagramme
+Originalbild -> Gefiltertes Bild -> Benchmark-Diagramme
 
 ### Laufzeit, Speedup und Effizienz
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
@@ -105,8 +101,8 @@ python scripts/plot_results.py
 
 
 ## Authors 
-Houman Safiri HTW Berlin (M.Sc. Applied Computer Science) 
-Nechirvan Haso Sodo Domili HTW Berlin (M.Sc. Applied Computer Science) 
+Houman Safiri HTW Berlin (M.Sc. Applied Computer Science) <br />
+Nechirvan Haso Sodo Domili HTW Berlin (M.Sc. Applied Computer Science) <br />
 Sarra Malek HTW Berlin (M.Sc. Applied Computer Science) 
 
 
