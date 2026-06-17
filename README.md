@@ -87,13 +87,12 @@ git clone url
 cd 
 ```
 C/OpenMP-Programm kompilieren:
+ 
 - 1. 
 ```bash
 make
 ```
-- 2. Oder 
-Das Programm kann direkt mit GCC kompiliert werden:
-
+- 2. Oder direkt mit GCC: 
 ```bash
 # in bearbeitung
 ```
