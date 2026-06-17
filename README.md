@@ -24,13 +24,13 @@ Die Hauptbenchmarks sollen auf einem festen System durchgeführt werden, damit d
 | ------ | --------- | --- |
 | 1 | Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz, 8 Kerne, 16 logische Prozessoren | 32.0 GB |
 
-Es werden 3 Hauptvarianten verglichen werden:
+Es werden folgende Vergleichsvarianten betrachtet:
 
 | Variante | Name                 | Aufgabe                                   |
 | -------- | ----------------------- | ------------------------------------------- |
-| 1        | Baseline / CPU      |  ohne Parallelisierung       |
+| 1        | Sequenzielle Baseline      |  Gaussian-Bildfilter ohne OpenMP; ein Thread verarbeitet das gesamte Bild  |
 | 2        | OpenMP parallel for |  Parallelisierung der äußeren Bildschleife, z. B. zeilenweise Verarbeitung |
-| 3        | OpenMP Scheduling-Vergleich |  Vergleich von `static`, `dynamic` und `guided` für die parallele Bildschleifez             |
+| 3        | OpenMP Scheduling-Vergleich |  Vergleich von `static`, `dynamic` und `guided` für die parallele Bildschleife             |
 | 4        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten |
 
 ## Ergebnisse:
@@ -39,22 +39,29 @@ Die folgenden Abbildungen werden später ergänzt:
 
 Originalbild -> Gefiltertes Bild -> Benchmark-Diagramme
 
+Die folgenden Abbildungen werden später ergänzt:
+- Vergleich zwischen Originalbild und gefiltertem Bild
+- Laufzeitdiagramm in Abhängigkeit von der Thread-Anzahl
+- Speedup-Diagramm
+- Effizienz-Diagramm
+- Laufzeitvergleich der Scheduling-Strategien
+
 ### Laufzeit, Speedup und Effizienz
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
 | ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | ----------------: | ----------------: | 
-| Laptop 1 | xxx | xxx | xxx | 1 | Static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | xxx | 2 | Static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | xxx | 4 | Static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | xxx | 8 | Static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | xxx | 16 | Static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | 1 | static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | 2 | static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | 4 | static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | 8 | static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | 16 | static | xxx s | xxx | xxx |
 
 
 ### Scheduling-Vergleich
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
 | ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
-| Laptop 1 | xxx | xxx | xxx | 8 | Static | xxx s |
-| Laptop 1 | xxx | xxx | xxx | 8 | Dynamic | xxx s |
-| Laptop 1 | xxx | xxx | xxx | 8 | Guided | xxx s |
+| Laptop 1 | xxx | xxx | xxx | 8 | static | xxx s |
+| Laptop 1 | xxx | xxx | xxx | 8 | dynamic | xxx s |
+| Laptop 1 | xxx | xxx | xxx | 8 | guided | xxx s |
 
 ## Interpretation
 
@@ -72,8 +79,8 @@ Für die Python-Hilfsskripte:
 - Matplotlib
 
 Für die C/OpenMP-Anwendung:
-- GCC
-- Make 
+- GCC mit OpenMP-Unterstützung
+- Optional: Make 
 
 ### Installing
 
@@ -88,6 +95,12 @@ C/OpenMP-Programm kompilieren:
 ```bash
 make
 ```
+Oder 
+Das Programm kann direkt mit GCC kompiliert werden:
+
+```bash
+gcc ... (in bearbeitung)
+
 Beispielaufruf:
 
 ```bash
@@ -112,4 +125,4 @@ This project is licensed under the MIT License.
 
 ## Acknowledgments
 
-https://610yilingliu.github.io/2020/07/15/ScheduleinOpenMP/
+- OpenMP Scheduling overview: https://610yilingliu.github.io/2020/07/15/ScheduleinOpenMP/
