@@ -44,7 +44,7 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Laufzeit, Speedup und Effizienz
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
-| ------ | --------: | ------------: | -----------------: | ---------------: |  ----------------: | ----------------: | 
+| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | ----------------: | ----------------: | 
 | Laptop 1 | xxx | xxx | 1 | static | xxx s | xxx | xxx |
 | Laptop 1 | xxx | xxx | 2 | static | xxx s | xxx | xxx |
 | Laptop 1 | xxx | xxx | 4 | static | xxx s | xxx | xxx |
@@ -54,7 +54,7 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Scheduling-Vergleich
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
-| ------ | --------: | ------------: | -----------------: | ---------------: | 
+| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
 | Laptop 1 | xxx | xxx | 8 | static | xxx s |
 | Laptop 1 | xxx | xxx | 8 | dynamic | xxx s |
 | Laptop 1 | xxx | xxx | 8 | guided | xxx s |
