@@ -31,9 +31,9 @@ Es werden folgende Vergleichsvarianten betrachtet:
 | 1        | Sequenzielle Baseline      |  Gaussian-Bildfilter ohne OpenMP; ein Thread verarbeitet das gesamte Bild  |
 | 2        | OpenMP parallel for |  Parallelisierung der äußeren Bildschleife, z. B. zeilenweise Verarbeitung |
 | 3        | OpenMP Scheduling-Vergleich |  Vergleich von `static`, `dynamic` und `guided` für die parallele Bildschleife             |
-| 4        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten |
+| 4        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten und Speicherzugriffen |
 
-## Ergebnisse:
+## Ergebnisse
 
 Die folgenden Abbildungen werden später ergänzt:
 - Vergleich zwischen Originalbild und gefiltertem Bild
@@ -44,7 +44,7 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Laufzeit, Speedup und Effizienz
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
-| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | ----------------: | ----------------: | 
+| ------ | --------: | ------------: | -----------------: | ---------------: |  ----------------: | ----------------: | 
 | Laptop 1 | xxx | xxx | 1 | static | xxx s | xxx | xxx |
 | Laptop 1 | xxx | xxx | 2 | static | xxx s | xxx | xxx |
 | Laptop 1 | xxx | xxx | 4 | static | xxx s | xxx | xxx |
@@ -54,13 +54,13 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Scheduling-Vergleich
 | Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
-| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
+| ------ | --------: | ------------: | -----------------: | ---------------: | 
 | Laptop 1 | xxx | xxx | 8 | static | xxx s |
 | Laptop 1 | xxx | xxx | 8 | dynamic | xxx s |
 | Laptop 1 | xxx | xxx | 8 | guided | xxx s |
 
 ## Interpretation
-
+Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
 
 ## Getting Started
 
@@ -88,7 +88,7 @@ cd
 ```
 C/OpenMP-Programm kompilieren:
  
-- 1. 
+- 1. Mit Make, falls ein Makefile vorhanden ist:
 ```bash
 make
 ```
