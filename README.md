@@ -1,21 +1,28 @@
 # Parallele Bildverarbeitung für Sentinel-1 SAR-Bilder mit OpenMP
 
-Dieses Repository enthält den Code und die Ergebnisse für die Belegaufgabe **„Parallele Bildverarbeitung für Sentinel-1 SAR-Bilder mit OpenMP“** im Kurs **Parallel Systems** (HTW Berlin,  Semester 2026).
+Dieses Repository enthält den Code, die Dokumentation und die Benchmark-Ergebnisse für die Belegaufgabe **„Parallele Bildverarbeitung für Sentinel-1 SAR-Bilder mit OpenMP“** im Kurs **Parallel Systems** an der HTW Berlin im Sommersemester 2026.
+
+Ziel des Projekts ist die Entwicklung und Analyse einer parallelen Bildverarbeitungspipeline für große Sentinel-1 SAR-Bilder. Der Schwerpunkt liegt auf der Umsetzung und Bewertung verschiedener OpenMP-Parallelisierungsstrategien für Filteroperationen auf Bilddaten.
+
+Sentinel-1 SAR-Bilder enthalten typischerweise Speckle-Rauschen und können sehr groß sein. Dadurch eignen sie sich gut als realistischer Anwendungsfall für datenparallele Verarbeitung mit Shared-Memory-Parallelisierung.
+
 
 Aufgaben des Projekts sind:
 
-- a. Laden Sie ein RGB-Bild und wandeln Sie es in ein Graustufenbild um.
-- b. Passen Sie anschließend Helligkeit und Kontrast des Bildes an.
-- c. Berechnen Sie zum Schluss das Histogramm der Grauwerte und stellen Sie es geeignet dar
-- (d. Laufzeit und Speedup verlgleichen)
+- a. Laden eines vorbereiteten Sentinel-1 SAR-Bildes in ein geeignetes Arbeitsformat
+- b. Implementierung eines sequenziellen Gaussian-Filters als Baseline
+- c. Implementierung einer parallelen OpenMP-Version
+- d. Vergleich verschiedener OpenMP-Scheduling-Strategien
+- e. Benchmarking mit unterschiedlichen Bildgrößen, Kernelgrößen und Thread-Anzahlen
+- f. Analyse von Laufzeit, Speedup, Effizienz, Speicherverbrauch und maximal verarbeitbarer Problemgröße
+- g. Optionale Erweiterung: Implementierung eines SAR-spezifischen Lee-Filters zur Speckle-Reduktion
+- h. Optionale Erweiterung: Vergleich der Laufzeit auf unterschiedlichen Hardware-Systemen
 
-Die Aufgaben werden auf x Laptops (mit unterschiedlichen Specs ausgeführt):
+Die Hauptbenchmarks sollen auf einem festen System durchgeführt werden, damit die Ergebnisse vergleichbar bleiben. Ein zusätzlicher Vergleich auf mehreren Laptops kann optional durchgeführt werden, um den Einfluss unterschiedlicher Hardware zu zeigen.
 
-| Laptop | Prozessor | GPU |
+| Laptop | Prozessor | RAM  |
 | ------ | --------- | --- |
-| 1 | Intel(R) Core(TM) Ultra 7 258V, 2200 MHz, 8 Kerne, 8 logische Prozessoren | Intel(R) Arc(TM) 140V GPU, 16 GB |
-| 2 | xxx | xxx |
-
+| 1 | Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz, 8 Kerne, 16 logische Prozessoren | 32.0 GB |
 
 Es werden x Varianten verglichen werden:
 
@@ -23,98 +30,55 @@ Es werden x Varianten verglichen werden:
 | Variante | Name                 | Aufgabe                                   |
 | -------- | ----------------------- | ------------------------------------------- |
 | 1        | Baseline / CPU      |  ohne Parallelisierung       |
-| 2        | OpenCV/ CPU |  optimierte Bibliothek für Bildverarbeitung |
-| 3        | PyOpenCL / GPU |  mit Parallelisierung             |
-| 2 | xxx | xxx |
+| 2        | OpenMP parallel for |  Parallelisierung der äußeren Bildschleife, z. B. zeilenweise Verarbeitung |
+| 3        | OpenMP Scheduling-Vergleich |  Vergleich von `static`, `dynamic` und `guided` für die parallele Bildschleifez             |
+| 2        | Optional: Tiling / Blocking | Blockbasierte Verarbeitung zur Untersuchung von Cache-Verhalten |
 
 ## Ergebnisse:
 
-a. + b.
+Die folgenden Abbildungen werden später ergänzt:
 
-<table width="100%">
-  <tr>
-    <td width="30%"><img src="images_input/1.nature_small.jpeg" width="100%"></td>
-    <td align="center" width="5%">></td>
-    <td width="30%"><img src="images_output/8a.png" width="100%"></td>
-    <td align="center" width="5%">></td>
-    <td width="30%"><img src="images_output/8b.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">Originalbild</td>
-    <td></td>
-    <td align="center">8a: Graustufenbild</td>
-    <td></td>
-    <td align="center">8b: Helligkeit/Kontrast erhöht</td>
-  </tr>
-</table>
+Originalbild
+        ↓
+Gefiltertes Bild
+        ↓
+Benchmark-Diagramme
 
-c.
-
-<table width="100%">
-  <tr>
-    <td width="50%"><img src="images_output/1.nature_small.png" width="100%"></td>
-    <td width="50%"><img src="images_output/2.nature_medium.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">640×415</td>
-    <td align="center">1024×663</td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="images_output/3.nature_large.png" width="100%"></td>
-    <td width="50%"><img src="images_output/4.nature_mega.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">1280×829</td>
-    <td align="center">2048×1327</td>
-  </tr>
-</table>
-
-d.
-
-<table width="100%">
-  <tr>
-    <td width="50%"><img src="images_output/runtime.png" width="100%"></td>
-    <td width="50%"><img src="images_output/speedup.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">Laufzeitvergleich CPU vs. PyOpenCL</td>
-    <td align="center">Speedup CPU vs. PyOpenCL</td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="images_output/runtime2.png" width="100%"></td>
-    <td width="50%"><img src="images_output/speedup2.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">Laufzeitvergleich CPU vs. PyOpenCL vs. OpenCV</td>
-    <td align="center">Speedup CPU vs. PyOpenCL und OpenCV</td>
-  </tr>
-</table>
+### Laufzeit, Speedup und Effizienz
+| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
+| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | ----------------: | ----------------: | 
+| Laptop 1 | xxx | xxx | xxx | 1 | Static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | xxx | 2 | Static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | xxx | 4 | Static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | xxx | 8 | Static | xxx s | xxx | xxx |
+| Laptop 1 | xxx | xxx | xxx | 16 | Static | xxx s | xxx | xxx |
 
 
-
-| Laptop | Bildgröße | CPU-Zeit in s | PyOpenCL-Zeit in s | OpenCV-Zeit in s | Speedup PyOpenCL | Speedup OpenCV |
-| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | -------------: |
-| Laptop 1 | 640×415 | 0.001519 | 0.000843 | 0.000266 | 1.803074 | 5.717592 |
-| Laptop 1 | 1024×663 | 0.004478 | 0.003081 | 0.000389 | 1.453387 | 11.498905 |
-| Laptop 1 | 1280×829 | 0.036199 | 0.006760 | 0.000560 | 5.354889 | 64.600783 |
-| Laptop 1 | 2048×1327 | 0.080978 | 0.014617 | 0.001083 | 5.539958 | 74.748139 |
-| Laptop 2 | 640×415 | … | … | … | … | … |
-| Laptop 2 | 1024×663 | … | … | … | … | … |
-| Laptop 2 | 1280×829 | … | … | … | … | … |
-| Laptop 2 | 2048×1327 | … | … | … | … | … |
+### Scheduling-Vergleich
+| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
+| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
+| Laptop 1 | xxx | xxx | xxx | 8 | Static | xxx s |
+| Laptop 1 | xxx | xxx | xxx | 8 | Dynamic | xxx s |
+| Laptop 1 | xxx | xxx | xxx | 8 | Guided | xxx s |
 
 ## Interpretation
 
 
 ## Getting Started
 
+### Datensatz
+...
+
 ### Dependencies
 
+Für die Python-Hilfsskripte:
 - Python 3.10+
 - NumPy
 - Matplotlib
-- PyOpenCL
-- OpenCV
+
+Für die C/OpenMP-Anwendung:
+- GCC
+- Make 
 
 ### Installing
 
@@ -124,13 +88,33 @@ Repository klonen:
 git clone url
 cd 
 ```
+C/OpenMP-Programm kompilieren:
+
+```bash
+make
+```
+Beispielaufruf:
+
+```bash
+in bearbeitung
+```
+Plots erzeugen:
+
+```bash
+python scripts/plot_results.py
+```
+
 
 ## Authors 
+Houman Safiri HTW Berlin (M.Sc. Applied Computer Science) 
+Nechirvan Haso Sodo Domili HTW Berlin (M.Sc. Applied Computer Science) 
 Sarra Malek HTW Berlin (M.Sc. Applied Computer Science) 
-xxxxxxx
+
 
 ## License  
 
 This project is licensed under the MIT License.
 
 ## Acknowledgments
+
+https://610yilingliu.github.io/2020/07/15/ScheduleinOpenMP/
