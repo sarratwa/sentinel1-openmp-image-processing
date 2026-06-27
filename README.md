@@ -65,7 +65,10 @@ Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
 ## Getting Started
 
 ### Datensatz
-...
+
+
+Für die Benchmarks wird ein Sentinel-1 SAR-Bild aus dem [Copernicus Browser](https://dataspace.copernicus.eu/data-collections/copernicus-sentinel-missions/sentinel-1) verwendet. 
+
 
 ### Dependencies
 
