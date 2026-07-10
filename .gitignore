@@ -1,2 +1,16 @@
-data/*
-!data/README.md
+*.exe
+*.out
+*.o
+
+data/
+*.SAFE/
+*.zip
+*.tif
+*.tiff
+
+output/
+*.pgm
+
+
+# my old test file
+src/test.c
