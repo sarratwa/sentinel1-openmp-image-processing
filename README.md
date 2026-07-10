@@ -36,7 +36,6 @@ Es werden folgende Vergleichsvarianten betrachtet:
 ## Ergebnisse
 
 <!---
-
 Die folgenden Abbildungen werden später ergänzt:
 - Vergleich zwischen Originalbild und gefiltertem Bild
 - Laufzeitdiagramm in Abhängigkeit von der Thread-Anzahl
@@ -51,7 +50,24 @@ Die folgenden Abbildungen werden später ergänzt:
 | ------ | --------: | -----: | ---------- | -------: |
 | Gaussian | 26562 x 16681 | 3x3 | none | 2.551 s |
 
-## OpenMP-Thread-Skalierung
+### Vergleich zwischen Originalbild und gefiltertem Bild
+
+Da das vollständige Sentinel-1-Bild sehr groß ist, wird für die visuelle Darstellung ein automatisch ausgewählter Ausschnitt mit sichtbarer Bildstruktur verwendet. Der dargestellte Ausschnitt hat eine Größe von `2048 x 2048` Pixeln und stammt aus dem Bereich `x = 0–2048`, `y = 2048–4096` des vollständigen Bildes (`26562 x 16681`). Die Benchmarks selbst werden weiterhin auf dem vollständigen Bild durchgeführt.
+
+<table width="100%">
+  <tr>
+    <td width="33%"><img src="results/original_crop.png" width="100%"></td>
+    <td width="33%"><img src="results/gaussian_crop.png" width="100%"></td>
+    <td width="33%"><img src="results/lee_crop.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td>Original</td>
+    <td>Gaussian-Filte</td>
+    <td>Lee-Filter</td>
+  </tr>
+</table>
+
+### OpenMP-Thread-Skalierung
 
 <table width="100%">
   <tr>
@@ -60,9 +76,9 @@ Die folgenden Abbildungen werden später ergänzt:
     <td width="33%"><img src="results/efficiency_vs_threads.png" width="100%"></td>
   </tr>
   <tr>
-    <td>Runtime vs threads</td>
+    <td>Runtime vs Threads</td>
     <td>Speedup vs Threads</td>
-    <td>Efficency vs threads</td>
+    <td>Efficiency vs Threads</td>
   </tr>
 </table>
 
@@ -107,14 +123,22 @@ Für die Benchmarks wird ein Sentinel-1 SAR-Bild aus dem [Copernicus Browser](ht
 
 Die Schritte zum Herunterladen und Vorbereiten der Sentinel-1-Daten sind in der Datei [`data/README.md`](data/README.md) beschrieben.
 
+Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird vor der Verarbeitung in ein normalisiertes 8-bit-PGM-Graustufenbild konvertiert.
+
+Das PGM-Bild dient nur als internes Arbeitsformat für die C/OpenMP-Implementierung. Die Pixelwerte stammen weiterhin aus der Sentinel-1-TIFF-Messdatei; lediglich das Dateiformat wird vereinfacht, damit das C-Programm ohne zusätzliche GeoTIFF-Bibliotheken arbeiten kann.
+
+<!---
+Durch die Konvertierung in ein 8-bit-Graustufenbild wird der ursprüngliche Wertebereich der Sentinel-1-Messdaten normalisiert. Die Bilddimensionen und die Pixelstruktur bleiben erhalten, jedoch nicht die vollständige radiometrische Genauigkeit der ursprünglichen TIFF-Daten. Der Schwerpunkt dieser Arbeit liegt auf der OpenMP-Parallelisierung und dem Laufzeitverhalten der Filteroperationen, nicht auf einer radiometrisch exakten SAR-Auswertung.
+-->
+
 ### Dependencies
 
 Für die Python-Hilfsskripte:
 - Python 3.10+
 - NumPy
 - Matplotlib
-- imageio 
-- pandas 
+- ImageIO
+- Pandas
 
 Für die C/OpenMP-Anwendung:
 - GCC mit OpenMP-Unterstützung
