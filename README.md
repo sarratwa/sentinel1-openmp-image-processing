@@ -45,13 +45,13 @@ Die folgenden Abbildungen werden später ergänzt:
 - Laufzeitvergleich der Scheduling-Strategien
 -->
 
-Die aktuellen Benchmark-Ergebnisse beziehen sich auf den Gaussian-Filter mit einem 3x3-Kernel. Die Bildgröße beträgt `26562 x 16681` Pixel. Getestet wurde auf Laptop 1 mit `static` Scheduling und unterschiedlichen Thread-Anzahlen.
+### Sequenzielle Baseline
 
-Die erzeugten Diagramme befinden sich im Ordner `results/`:
+| Filter | Bildgröße | Kernel | Scheduling | Laufzeit |
+| ------ | --------: | -----: | ---------- | -------: |
+| Gaussian | 26562 x 16681 | 3x3 | none | 2.551 s |
 
-- `runtime_vs_threads.png`
-- `speedup_vs_threads.png`
-- `efficiency_vs_threads.png`
+## OpenMP-Thread-Skalierung
 
 <table width="100%">
   <tr>
@@ -66,22 +66,33 @@ Die erzeugten Diagramme befinden sich im Ordner `results/`:
   </tr>
 </table>
 
-### Laufzeit, Speedup und Effizienz
-| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
 | ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: | -------: |
-| Laptop 1 | 26562 x 16681 | 3x3 | 1 | static | 3.154 s | 0.809 | 0.809 | 1267.66 MB |
-| Laptop 1 | 26562 x 16681 | 3x3 | 2 | static | 1.600 s | 1.594 | 0.797 | 1267.66 MB |
-| Laptop 1 | 26562 x 16681 | 3x3 | 4 | static | 0.931 s | 2.740 | 0.685 | 1267.66 MB |
-| Laptop 1 | 26562 x 16681 | 3x3 | 8 | static | 0.625 s | 4.082 | 0.510 | 1267.66 MB |
-| Laptop 1 | 26562 x 16681 | 3x3 | 16 | static | 0.488 s | 5.227 | 0.327 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 3.154 s | 0.809 | 0.809 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 1.600 s | 1.594 | 0.797 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.931 s | 2.740 | 0.685 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.625 s | 4.082 | 0.510 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.488 s | 5.227 | 0.327 | 1267.66 MB |
 
+### Bildgrößenvergleich
+
+| Filter | Bildgröße | Threads | Scheduling | Laufzeit | Speicher |
+| ------ | --------: | ------: | ---------- | -------: | -------: |
+| Gaussian | 2048 x 2048 | 8 | static | offen | offen |
+| Gaussian | 4096 x 4096 | 8 | static | offen | offen |
+| Gaussian | 8192 x 8192 | 8 | static | offen | offen |
+| Gaussian | 26562 x 16681 | 8 | static | 0.625 s | 1267.66 MB |
 
 ### Scheduling-Vergleich
-| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit |
+
+Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`.
+
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit |
 | ------ | --------: | -----: | ------: | ---------- | -------: |
-| Laptop 1 | 26562 x 16681 | 3x3 | 8 | static | offen |
-| Laptop 1 | 26562 x 16681 | 3x3 | 8 | dynamic | offen |
-| Laptop 1 | 26562 x 16681 | 3x3 | 8 | guided | offen |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.625 s |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | offen |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | offen |
+
 
 ## Interpretation
 Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
