@@ -46,12 +46,15 @@ void write_csv_row(
     Formula:
         width * height * bytes_per_pixel * number_of_images
 
-    bytes_per_pixel = 1 because we use unsigned char grayscale pixels.
+    bytes_per_pixel = 2, since pixels are now 16-bit (unsigned short)
+    instead of 8-bit (unsigned char). This roughly doubles the
+    reported memory footprint compared to the old 8-bit pipeline,
+    which is expected and correct.
 */
 double estimate_memory_mb(Image image, int number_of_images) {
     double bytes = (double)image.width *
                    (double)image.height *
-                   sizeof(unsigned char) *
+                   sizeof(unsigned short) *
                    number_of_images;
 
     return bytes / (1024.0 * 1024.0);

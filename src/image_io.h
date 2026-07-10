@@ -2,19 +2,16 @@
 #define IMAGE_IO_H
 
 /*
-    Shared image structure.
+    Image struct.
 
-    width  = number of columns
-    height = number of rows
-    data   = grayscale pixels stored in one flat array
-
-    Pixel access:
-        data[y * width + x]
+    Pixels are stored as unsigned short (16-bit) instead of
+    unsigned char (8-bit) to preserve more of the original
+    Sentinel-1 dynamic range after normalization.
 */
 typedef struct {
     int width;
     int height;
-    unsigned char *data;
+    unsigned short *data;
 } Image;
 
 Image read_pgm(const char *filename);

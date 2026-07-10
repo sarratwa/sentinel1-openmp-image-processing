@@ -110,6 +110,11 @@ int main() {
     printf("\nOpenMP benchmark:\n");
     printf("Threads,Runtime,Speedup,Efficiency\n");
 
+    // Warm-up: forces libgomp thread pool initialization before timing starts.
+    // Not included in benchmark results.
+    omp_set_num_threads(2);
+    gaussian_filter_openmp(input, output_omp);
+
     for (int i = 0; i < number_of_tests; i++) {
         int threads = thread_counts[i];
 

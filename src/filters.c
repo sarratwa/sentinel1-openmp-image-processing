@@ -15,6 +15,10 @@
         1 2 1
 
     Kernel sum = 16
+
+    Pixels are now 16-bit (unsigned short). The accumulator
+    stays a regular int: max possible sum is 65535 * 16 = 1,048,560,
+    well within int range, so no overflow risk.
 */
 void gaussian_filter_sequential(Image input, Image output) {
     int width = input.width;
@@ -57,7 +61,7 @@ void gaussian_filter_sequential(Image input, Image output) {
             }
 
             output.data[y * width + x] =
-                (unsigned char)(sum / kernel_sum);
+                (unsigned short)(sum / kernel_sum);
         }
     }
 }
@@ -68,16 +72,11 @@ void gaussian_filter_sequential(Image input, Image output) {
     This function does the same calculation as the sequential version,
     but the outer image loop is parallelized.
 
-    IMPORTANT:
-    schedule(runtime) means the scheduling strategy is selected in main()
-    using omp_set_schedule().
-
-    This allows us to compare:
-        static
-        dynamic
-        guided
-
-    without writing three separate filter functions.
+    NOTE:
+    Still hardcoded to schedule(static) for now, matching the
+    sequential/OpenMP comparison already in place. Switching this
+    to schedule(runtime) is a separate, still-open change needed
+    for the static/dynamic/guided comparison.
 */
 void gaussian_filter_openmp(Image input, Image output) {
     int width = input.width;
@@ -127,7 +126,7 @@ void gaussian_filter_openmp(Image input, Image output) {
             }
 
             output.data[y * width + x] =
-                (unsigned char)(sum / kernel_sum);
+                (unsigned short)(sum / kernel_sum);
         }
     }
 }

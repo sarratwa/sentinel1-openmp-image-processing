@@ -22,11 +22,8 @@ def find_interesting_crop_position(
     """
     Finds a crop with visible structure.
 
-    Instead of taking the center crop, this scans the image and chooses
-    the crop with the highest score based on non-zero pixel intensity.
-
-    Returns:
-        best_x, best_y, crop_width, crop_height
+    The score prefers crops with texture/detail, not only very bright pixels.
+    This usually gives a better visual example for SAR-like images.
     """
     height, width = image.shape[:2]
 
@@ -39,15 +36,26 @@ def find_interesting_crop_position(
 
     for y in range(0, height - crop_height + 1, step):
         for x in range(0, width - crop_width + 1, step):
-            crop = image[y:y + crop_height, x:x + crop_width]
+            crop = image[y:y + crop_height, x:x + crop_width].astype(np.float32)
 
-            # Ignore pure black pixels as much as possible
             nonzero = crop[crop > 0]
 
-            if nonzero.size == 0:
-                score = 0.0
-            else:
-                score = float(np.mean(nonzero)) + float(np.percentile(nonzero, 99))
+            # Skip almost empty crops
+            nonzero_ratio = nonzero.size / crop.size
+            if nonzero_ratio < 0.05:
+                continue
+
+            # Robust statistics for SAR-like data
+            p50 = np.percentile(nonzero, 50)
+            p95 = np.percentile(nonzero, 95)
+            p99 = np.percentile(nonzero, 99)
+            std = np.std(nonzero)
+
+            # Prefer structure/contrast, not only extreme brightness
+            contrast_score = p95 - p50
+            texture_score = std
+
+            score = contrast_score + texture_score + 0.1 * p99
 
             if score > best_score:
                 best_score = score
@@ -71,9 +79,6 @@ def crop_image(
     crop_width: int,
     crop_height: int
 ) -> np.ndarray:
-    """
-    Crops the image using explicit crop coordinates.
-    """
     return image[y:y + crop_height, x:x + crop_width]
 
 
@@ -81,8 +86,8 @@ def stretch_for_display(image: np.ndarray) -> np.ndarray:
     """
     Contrast stretch for visualization only.
 
-    This does not affect the benchmark data.
-    It only makes the PNG preview easier to see.
+    Works for both 8-bit and 16-bit PGM input.
+    Output PNG is still 8-bit because it is only a preview image.
     """
     image = image.astype(np.float32)
 
@@ -120,14 +125,24 @@ def main() -> None:
     original = read_image(input_pgm)
     gaussian = read_image(gaussian_pgm)
 
-    # Find crop position on the original image
+    print("Input image:")
+    print(f"  shape: {original.shape}")
+    print(f"  dtype: {original.dtype}")
+    print(f"  min:   {original.min()}")
+    print(f"  max:   {original.max()}")
+
+    print("\nGaussian image:")
+    print(f"  shape: {gaussian.shape}")
+    print(f"  dtype: {gaussian.dtype}")
+    print(f"  min:   {gaussian.min()}")
+    print(f"  max:   {gaussian.max()}")
+
     crop_x, crop_y, crop_width, crop_height = find_interesting_crop_position(
         original,
         crop_size=crop_size,
         step=step
     )
 
-    # Use exactly the same crop coordinates for original and Gaussian image
     original_crop_raw = crop_image(
         original,
         crop_x,
@@ -144,7 +159,6 @@ def main() -> None:
         crop_height
     )
 
-    # Contrast-stretch only for visualization
     original_crop = stretch_for_display(original_crop_raw)
     gaussian_crop = stretch_for_display(gaussian_crop_raw)
 
@@ -154,6 +168,7 @@ def main() -> None:
     print("\nRaw crop statistics:")
     for name, img in [("original", original_crop_raw), ("gaussian", gaussian_crop_raw)]:
         print(name)
+        print("  dtype:", img.dtype)
         print("  min:", img.min())
         print("  max:", img.max())
         print("  mean:", img.mean())

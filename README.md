@@ -62,7 +62,7 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
   </tr>
   <tr>
     <td>Original</td>
-    <td>Gaussian-Filte</td>
+    <td>Gaussian-Filter</td>
     <td>Lee-Filter</td>
   </tr>
 </table>
@@ -123,7 +123,7 @@ Für die Benchmarks wird ein Sentinel-1 SAR-Bild aus dem [Copernicus Browser](ht
 
 Die Schritte zum Herunterladen und Vorbereiten der Sentinel-1-Daten sind in der Datei [`data/README.md`](data/README.md) beschrieben.
 
-Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird vor der Verarbeitung in ein normalisiertes 8-bit-PGM-Graustufenbild konvertiert.
+Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird vor der Verarbeitung in ein normalisiertes 16-bit-PGM-Graustufenbild konvertiert.
 
 Das PGM-Bild dient nur als internes Arbeitsformat für die C/OpenMP-Implementierung. Die Pixelwerte stammen weiterhin aus der Sentinel-1-TIFF-Messdatei; lediglich das Dateiformat wird vereinfacht, damit das C-Programm ohne zusätzliche GeoTIFF-Bibliotheken arbeiten kann.
 
