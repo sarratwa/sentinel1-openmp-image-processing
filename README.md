@@ -66,8 +66,38 @@ Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
 
 ### Datensatz
 
+Die originalen Sentinel-1-Daten werden nicht im Repository gespeichert, da die Dateien sehr groß sind.
+
 Für die Benchmarks wird ein Sentinel-1 SAR-Bild aus dem [Copernicus Browser](https://dataspace.copernicus.eu/data-collections/copernicus-sentinel-missions/sentinel-1) verwendet. 
 
+#### Download der Sentinel-1-Daten
+1. Im Copernicus Browser ein Benutzerkonto erstellen oder mit einem bestehenden Konto anmelden.
+
+2. Nach Sentinel-1-Daten suchen und ein passendes Sentinel-1-Produkt auswählen.  
+   Für dieses Projekt wird ein Level-1-GRD-Produkt verwendet, zum Beispiel mit einem Namen ähnlich zu:
+
+```text
+S1A_IW_GRDH_1SDV_...
+```
+
+3. Das Produkt herunterladen und entpacken.
+
+4. Im entpackten Sentinel-1-Produkt befindet sich ein Ordner `measurement`.  
+   In diesem Ordner liegen die eigentlichen Bilddaten als TIFF-Dateien.
+
+5. Für dieses Projekt wird eine TIFF-Datei aus dem `measurement`-Ordner verwendet, zum Beispiel die VV-Polarisation:
+
+```text
+s1a-iw-grd-vv-...tiff
+```
+
+6. Diese TIFF-Datei wird in den Ordner `data/` kopiert und einheitlich umbenannt zu:
+
+```text
+data/sentinel_input.tiff
+```
+
+Die weitere Vorbereitung erfolgt anschließend mit dem Python-Skript `scripts/prepare_tiff.py`. Dabei wird die TIFF-Datei in ein einfaches 8-bit-PGM-Graustufenbild konvertiert, das vom C/OpenMP-Programm gelesen werden kann.
 
 ### Dependencies
 
@@ -75,10 +105,11 @@ Für die Python-Hilfsskripte:
 - Python 3.10+
 - NumPy
 - Matplotlib
+- imageio 
+- pandas 
 
 Für die C/OpenMP-Anwendung:
 - GCC mit OpenMP-Unterstützung
-- Optional: Make 
 
 ### Installing
 
@@ -88,28 +119,24 @@ Repository klonen:
 git clone url
 cd 
 ```
-C/OpenMP-Programm kompilieren:
- 
-- 1. Mit Make, falls ein Makefile vorhanden ist:
-```bash
-make
-```
-- 2. Oder direkt mit GCC: 
-```bash
-# in bearbeitung
-```
-
-Beispielaufruf:
+TIFF-Datei vorbereiten:
 
 ```bash
-# in bearbeitung
+python scripts/prepare_tiff.py
 ```
+
+C/OpenMP-Programm kompilieren & ausführen:
+
+```bash
+gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe
+./main.exe
+```
+
 Plots erzeugen:
 
 ```bash
 python scripts/plot_results.py
 ```
-
 
 ## Authors 
 Houman Safiri HTW Berlin (M.Sc. Applied Computer Science) <br />
