@@ -9,7 +9,7 @@ Sentinel-1 SAR-Bilder enthalten typischerweise Speckle-Rauschen und können sehr
 
 Aufgaben des Projekts sind:
 
-- a. Laden eines vorbereiteten Sentinel-1 SAR-Bildes in ein geeignetes Arbeitsformat
+- a. Direktes Laden einer Sentinel-1-TIFF-Datei mit GDAL
 - b. Implementierung eines sequenziellen Gaussian-Filters als Baseline
 - c. Implementierung einer parallelen OpenMP-Version
 - d. Vergleich verschiedener OpenMP-Scheduling-Strategien
@@ -52,7 +52,7 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Vergleich zwischen Originalbild und gefiltertem Bild
 
-Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Darstellung ein automatisch ausgewählter Ausschnitt mit sichtbarer Bildstruktur verwendet. Die gezeigten Bilder zeigen die normalisierten PGM-Daten, die aus der VV-TIFF-Messdatei erzeugt und von der C/OpenMP-Implementierung verarbeitet werden. Der Ausschnitt hat eine Größe von `2048 x 2048` Pixeln und stammt aus dem Bereich `x = 0–2048`, `y = 2048–4096` des vollständige PGM-Bild (`26562 x 16681`). Die Benchmarks selbst werden weiterhin auf dem vollständigen Bild durchgeführt.
+Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Darstellung ein automatisch ausgewählter Ausschnitt mit sichtbarer Bildstruktur verwendet. Die gezeigten Bilder stammen direkt aus der ursprünglichen Sentinel-1-VV-TIFF-Datei und aus dem vom C/OpenMP-Programm erzeugten gefilterten TIFF. Der Ausschnitt hat eine Größe von `2048 x 2048` Pixeln. Die Benchmarks selbst werden weiterhin auf dem vollständigen Bild (`26562 x 16681`) durchgeführt.
 
 <table width="100%">
   <tr>
@@ -122,14 +122,9 @@ Die originalen Sentinel-1-Daten werden nicht im Repository gespeichert, da die D
 Für die Benchmarks wird ein Sentinel-1 SAR-Bild aus dem [Copernicus Browser](https://dataspace.copernicus.eu/data-collections/copernicus-sentinel-missions/sentinel-1) verwendet. 
 
 Die Schritte zum Herunterladen und Vorbereiten der Sentinel-1-Daten sind in der Datei [`data/README.md`](data/README.md) beschrieben.
+Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird direkt mit GDAL im C-Programm eingelesen.
 
-Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird vor der Verarbeitung in ein normalisiertes 16-bit-PGM-Graustufenbild konvertiert.
-
-Das PGM-Bild dient nur als internes Arbeitsformat für die C/OpenMP-Implementierung. Die Pixelwerte stammen weiterhin aus der Sentinel-1-TIFF-Messdatei; lediglich das Dateiformat wird vereinfacht, damit das C-Programm ohne zusätzliche GeoTIFF-Bibliotheken arbeiten kann.
-
-<!---
-Durch die Konvertierung in ein 8-bit-Graustufenbild wird der ursprüngliche Wertebereich der Sentinel-1-Messdaten normalisiert. Die Bilddimensionen und die Pixelstruktur bleiben erhalten, jedoch nicht die vollständige radiometrische Genauigkeit der ursprünglichen TIFF-Daten. Der Schwerpunkt dieser Arbeit liegt auf der OpenMP-Parallelisierung und dem Laufzeitverhalten der Filteroperationen, nicht auf einer radiometrisch exakten SAR-Auswertung.
--->
+Die ursprünglichen Pixelwerte werden von GDAL in einen Float32-Arbeitspuffer übertragen und anschließend vom sequenziellen beziehungsweise parallelen Filter verarbeitet. Eine vorherige Konvertierung in das PGM-Format ist nicht mehr notwendig.
 
 ### Dependencies
 
@@ -142,7 +137,8 @@ Für die Python-Hilfsskripte:
 
 Für die C/OpenMP-Anwendung:
 - GCC mit OpenMP-Unterstützung
-(Unter Windows wurde GCC über MSYS2/UCRT64 verwendet)
+- GDAL
+- Unter Windows: MSYS2/UCRT64
 
 ### Installing
 
@@ -153,27 +149,18 @@ git clone url
 cd 
 ```
 
-### Daten vorbereiten
-
-Da TIFF-Dateien in C nur mit zusätzlichen Bibliotheken wie GDAL oder libtiff direkt gelesen werden können, wird die Sentinel-1-TIFF-Datei zunächst in ein einfaches PGM-Graustufenbild konvertiert. Dieses Format kann im C/OpenMP-Programm ohne externe Bildbibliotheken eingelesen werden:
-
-
-```bash
-python scripts/prepare_tiff.py
-```
-
 ### C/OpenMP-Programm kompilieren & ausführen
 
 ```bash
-gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe
-./main.exe
+gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe -lgdal
+./main.exe "data/sentinel_datei.tiff"
 ```
 
 Das Programm führt aktuell den sequenziellen Gaussian-Filter und die OpenMP-Version aus. Dabei werden die Ausgabebilder und Benchmark-Ergebnisse erzeugt:
 
 ```text
-output/gaussian_seq.pgm
-output/gaussian_omp.pgm
+output/gaussian_seq.tif
+output/gaussian_omp.tif
 results/benchmark_results.csv
 ```
 
@@ -205,3 +192,4 @@ This project is licensed under the MIT License.
 
 - OpenMP Scheduling overview: https://610yilingliu.github.io/2020/07/15/ScheduleinOpenMP/
 - S1 Products:  https://sentiwiki.copernicus.eu/web/s1-products
+- https://gdal.org/en/stable/download.html

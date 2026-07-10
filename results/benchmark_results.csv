@@ -1,7 +1,7 @@
 filter,version,width,height,kernel,threads,schedule,runtime,speedup,efficiency,memory_mb
-gaussian,sequential,26562,16681,3,1,none,2.440000,1.000,1.000,2535.33
-gaussian,openmp,26562,16681,3,1,static,3.183000,0.767,0.767,2535.33
-gaussian,openmp,26562,16681,3,2,static,1.599000,1.526,0.763,2535.33
-gaussian,openmp,26562,16681,3,4,static,0.850000,2.871,0.718,2535.33
-gaussian,openmp,26562,16681,3,8,static,0.543000,4.494,0.562,2535.33
-gaussian,openmp,26562,16681,3,16,static,0.480000,5.083,0.318,2535.33
+gaussian,sequential,26562,16681,3,1,none,2.354000,1.000,1.000,5070.66
+gaussian,openmp,26562,16681,3,1,static,1.695000,1.389,1.389,5070.66
+gaussian,openmp,26562,16681,3,2,static,0.849000,2.773,1.386,5070.66
+gaussian,openmp,26562,16681,3,4,static,0.457000,5.151,1.288,5070.66
+gaussian,openmp,26562,16681,3,8,static,0.316000,7.449,0.931,5070.66
+gaussian,openmp,26562,16681,3,16,static,0.269000,8.751,0.547,5070.66

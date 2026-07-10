@@ -1,97 +1,109 @@
+#include <gdal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "image_io.h"
 
-/*
-    Reads a binary 16-bit PGM image file.
-
-    Supported format:
-        P5
-        width height
-        65535
-        binary pixel data (big-endian, 2 bytes per pixel)
-
-    The PGM specification requires big-endian byte order
-    (most significant byte first) whenever maxval > 255.
-    Since x86 is little-endian internally, each pixel must
-    be byte-swapped after reading.
-*/
-Image read_pgm(const char *filename) {
-    FILE *file = fopen(filename, "rb");
-
-    if (!file) {
-        fprintf(stderr, "Error: Could not open file %s\n", filename);
-        exit(1);
+static size_t checked_pixel_count(int width, int height) {
+    if (width <= 0 || height <= 0) {
+        fprintf(stderr, "Error: Invalid image dimensions %d x %d.\n", width, height);
+        exit(EXIT_FAILURE);
     }
 
-    char magic[3];
+    size_t w = (size_t)width;
+    size_t h = (size_t)height;
 
-    fscanf(file, "%2s", magic);
-
-    if (strcmp(magic, "P5") != 0) {
-        fprintf(stderr, "Error: Only binary PGM P5 format is supported.\n");
-        fclose(file);
-        exit(1);
+    if (w > SIZE_MAX / h) {
+        fprintf(stderr, "Error: Image dimensions are too large.\n");
+        exit(EXIT_FAILURE);
     }
 
-    int width;
-    int height;
-    int max_value;
+    size_t pixels = w * h;
 
-    fscanf(file, "%d %d", &width, &height);
-    fscanf(file, "%d", &max_value);
-
-    if (max_value != 65535) {
-        fprintf(stderr,
-                "Error: Only 16-bit PGM images with max value 65535 are supported.\n");
-        fclose(file);
-        exit(1);
+    if (pixels > SIZE_MAX / sizeof(float)) {
+        fprintf(stderr, "Error: Image buffer would be too large.\n");
+        exit(EXIT_FAILURE);
     }
 
-    // Consume one whitespace character after the header
-    fgetc(file);
+    return pixels;
+}
 
-    unsigned short *data = malloc((size_t)width * (size_t)height * sizeof(unsigned short));
+Image read_tiff(const char *filename) {
+    if (!filename) {
+        fprintf(stderr, "Error: No input filename was provided.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    GDALAllRegister();
+
+    GDALDatasetH dataset = GDALOpen(filename, GA_ReadOnly);
+
+    if (!dataset) {
+        fprintf(stderr, "Error: Could not open TIFF file %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    int width = GDALGetRasterXSize(dataset);
+    int height = GDALGetRasterYSize(dataset);
+    int band_count = GDALGetRasterCount(dataset);
+
+    if (band_count < 1) {
+        fprintf(stderr, "Error: TIFF file contains no raster bands.\n");
+        GDALClose(dataset);
+        exit(EXIT_FAILURE);
+    }
+
+    GDALRasterBandH band = GDALGetRasterBand(dataset, 1);
+
+    if (!band) {
+        fprintf(stderr, "Error: Could not access raster band 1.\n");
+        GDALClose(dataset);
+        exit(EXIT_FAILURE);
+    }
+
+    size_t pixel_count = checked_pixel_count(width, height);
+    float *data = malloc(pixel_count * sizeof(float));
 
     if (!data) {
-        fprintf(stderr, "Error: Memory allocation failed for input image.\n");
-        fclose(file);
-        exit(1);
+        fprintf(stderr,
+                "Error: Could not allocate %.2f MB for the input image.\n",
+                (double)(pixel_count * sizeof(float)) / (1024.0 * 1024.0));
+        GDALClose(dataset);
+        exit(EXIT_FAILURE);
     }
 
-    // Read raw big-endian bytes first, two bytes per pixel
-    size_t total_pixels = (size_t)width * (size_t)height;
-    unsigned char *raw_bytes = malloc(total_pixels * 2);
+    CPLErr result = GDALRasterIO(
+        band,
+        GF_Read,
+        0,
+        0,
+        width,
+        height,
+        data,
+        width,
+        height,
+        GDT_Float32,
+        0,
+        0
+    );
 
-    if (!raw_bytes) {
-        fprintf(stderr, "Error: Memory allocation failed for raw byte buffer.\n");
+    if (result != CE_None) {
+        fprintf(stderr, "Error: Could not read raster pixels from %s\n", filename);
         free(data);
-        fclose(file);
-        exit(1);
+        GDALClose(dataset);
+        exit(EXIT_FAILURE);
     }
 
-    size_t bytes_read = fread(raw_bytes, 1, total_pixels * 2, file);
+    GDALDataType source_type = GDALGetRasterDataType(band);
 
-    if (bytes_read != total_pixels * 2) {
-        fprintf(stderr, "Error: Could not read all pixels from file.\n");
-        free(raw_bytes);
-        free(data);
-        fclose(file);
-        exit(1);
-    }
+    printf("Loaded TIFF: %s\n", filename);
+    printf("Image size: %d x %d\n", width, height);
+    printf("Raster bands: %d\n", band_count);
+    printf("Source data type: %s\n", GDALGetDataTypeName(source_type));
+    printf("Processing buffer type: Float32\n");
 
-    fclose(file);
-
-    // Byte-swap: big-endian (MSB first) -> host uint16
-    for (size_t i = 0; i < total_pixels; i++) {
-        unsigned char high_byte = raw_bytes[i * 2];
-        unsigned char low_byte = raw_bytes[i * 2 + 1];
-        data[i] = (unsigned short)((high_byte << 8) | low_byte);
-    }
-
-    free(raw_bytes);
+    GDALClose(dataset);
 
     Image image;
     image.width = width;
@@ -101,80 +113,134 @@ Image read_pgm(const char *filename) {
     return image;
 }
 
-/*
-    Writes an image as a binary 16-bit PGM file (P5, maxval 65535).
-
-    Pixels must be written big-endian (most significant byte first)
-    per the PGM specification.
-*/
-void write_pgm(const char *filename, Image image) {
-    FILE *file = fopen(filename, "wb");
-
-    if (!file) {
-        fprintf(stderr, "Error: Could not write file %s\n", filename);
-        exit(1);
+void write_tiff(
+    const char *filename,
+    Image image,
+    const char *reference_filename
+) {
+    if (!filename || !image.data) {
+        fprintf(stderr, "Error: Invalid output image or filename.\n");
+        exit(EXIT_FAILURE);
     }
 
-    fprintf(file, "P5\n%d %d\n65535\n", image.width, image.height);
+    checked_pixel_count(image.width, image.height);
+    GDALAllRegister();
 
-    size_t total_pixels = (size_t)image.width * (size_t)image.height;
-    unsigned char *raw_bytes = malloc(total_pixels * 2);
+    GDALDriverH driver = GDALGetDriverByName("GTiff");
 
-    if (!raw_bytes) {
-        fprintf(stderr, "Error: Memory allocation failed while writing image.\n");
-        fclose(file);
-        exit(1);
+    if (!driver) {
+        fprintf(stderr, "Error: GDAL GeoTIFF driver is unavailable.\n");
+        exit(EXIT_FAILURE);
     }
 
-    for (size_t i = 0; i < total_pixels; i++) {
-        unsigned short pixel = image.data[i];
-        raw_bytes[i * 2] = (unsigned char)(pixel >> 8);       // MSB first
-        raw_bytes[i * 2 + 1] = (unsigned char)(pixel & 0xFF); // LSB second
+    char *creation_options[] = {
+        "COMPRESS=LZW",
+        "TILED=YES",
+        "BIGTIFF=IF_SAFER",
+        NULL
+    };
+
+    GDALDatasetH output = GDALCreate(
+        driver,
+        filename,
+        image.width,
+        image.height,
+        1,
+        GDT_Float32,
+        creation_options
+    );
+
+    if (!output) {
+        fprintf(stderr, "Error: Could not create output TIFF %s\n", filename);
+        exit(EXIT_FAILURE);
     }
 
-    fwrite(raw_bytes, 1, total_pixels * 2, file);
+    if (reference_filename) {
+        GDALDatasetH reference = GDALOpen(reference_filename, GA_ReadOnly);
 
-    free(raw_bytes);
-    fclose(file);
+        if (reference) {
+            double geo_transform[6];
+
+            if (GDALGetGeoTransform(reference, geo_transform) == CE_None) {
+                GDALSetGeoTransform(output, geo_transform);
+            }
+
+            const char *projection = GDALGetProjectionRef(reference);
+
+            if (projection && projection[0] != '\0') {
+                GDALSetProjection(output, projection);
+            }
+
+            GDALRasterBandH reference_band = GDALGetRasterBand(reference, 1);
+            GDALRasterBandH output_band = GDALGetRasterBand(output, 1);
+
+            if (reference_band && output_band) {
+                int has_nodata = 0;
+                double nodata = GDALGetRasterNoDataValue(reference_band, &has_nodata);
+
+                if (has_nodata) {
+                    GDALSetRasterNoDataValue(output_band, nodata);
+                }
+            }
+
+            GDALClose(reference);
+        } else {
+            fprintf(stderr,
+                    "Warning: Could not reopen reference TIFF; output will have no copied georeferencing.\n");
+        }
+    }
+
+    GDALRasterBandH output_band = GDALGetRasterBand(output, 1);
+
+    CPLErr result = GDALRasterIO(
+        output_band,
+        GF_Write,
+        0,
+        0,
+        image.width,
+        image.height,
+        image.data,
+        image.width,
+        image.height,
+        GDT_Float32,
+        0,
+        0
+    );
+
+    if (result != CE_None) {
+        fprintf(stderr, "Error: Could not write pixels to %s\n", filename);
+        GDALClose(output);
+        exit(EXIT_FAILURE);
+    }
+
+    GDALFlushCache(output);
+    GDALClose(output);
 }
 
-/*
-    Creates an empty image with allocated memory.
-
-    The buffer is zero-initialized so that physical pages are
-    touched before benchmark timing starts (avoids first-touch
-    page-fault overhead skewing the first measured run).
-*/
 Image create_empty_image(int width, int height) {
-    Image image;
+    size_t pixel_count = checked_pixel_count(width, height);
 
+    Image image;
     image.width = width;
     image.height = height;
-    image.data = calloc((size_t)width * (size_t)height, sizeof(unsigned short));
+    image.data = calloc(pixel_count, sizeof(float));
 
     if (!image.data) {
-        fprintf(stderr, "Error: Could not allocate memory for image.\n");
-        exit(1);
+        fprintf(stderr, "Error: Could not allocate output image.\n");
+        exit(EXIT_FAILURE);
     }
 
     return image;
 }
 
-/*
-    Compares two images pixel by pixel.
-
-    Return:
-        1 = equal
-        0 = different
-*/
 int images_are_equal(Image a, Image b) {
-    if (a.width != b.width || a.height != b.height) {
+    if (a.width != b.width || a.height != b.height || !a.data || !b.data) {
         return 0;
     }
 
-    size_t total_pixels = (size_t)a.width * (size_t)a.height;
+    size_t pixel_count = (size_t)a.width * (size_t)a.height;
 
-    for (size_t i = 0; i < total_pixels; i++) {
+    for (size_t i = 0; i < pixel_count; i++) {
         if (a.data[i] != b.data[i]) {
             return 0;
         }
@@ -183,9 +249,6 @@ int images_are_equal(Image a, Image b) {
     return 1;
 }
 
-/*
-    Frees the image memory.
-*/
 void free_image(Image image) {
     free(image.data);
 }

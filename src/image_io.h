@@ -1,23 +1,29 @@
 #ifndef IMAGE_IO_H
 #define IMAGE_IO_H
 
-/*
-    Image struct.
-
-    Pixels are stored as unsigned short (16-bit) instead of
-    unsigned char (8-bit) to preserve more of the original
-    Sentinel-1 dynamic range after normalization.
-*/
 typedef struct {
     int width;
     int height;
-    unsigned short *data;
+    float *data;
 } Image;
 
-Image read_pgm(const char *filename);
-void write_pgm(const char *filename, Image image);
+/* Read band 1 from a TIFF/GeoTIFF and convert its pixels to float. */
+Image read_tiff(const char *filename);
+
+/* Write a Float32 GeoTIFF and copy georeferencing from the input file. */
+void write_tiff(
+    const char *filename,
+    Image image,
+    const char *reference_filename
+);
+
+/* Allocate a zero-initialized float image. */
 Image create_empty_image(int width, int height);
+
+/* Exact comparison, suitable because both filters perform identical operations. */
 int images_are_equal(Image a, Image b);
+
+/* Release the pixel buffer. */
 void free_image(Image image);
 
 #endif

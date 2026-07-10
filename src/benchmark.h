@@ -2,6 +2,7 @@
 #define BENCHMARK_H
 
 #include <stdio.h>
+
 #include "image_io.h"
 
 void write_csv_header(FILE *csv);

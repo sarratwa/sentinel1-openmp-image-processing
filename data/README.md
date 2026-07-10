@@ -24,5 +24,3 @@ s1a-iw-grd-vv-...tiff
 ```text
 data/sentinel_input.tiff
 ```
-
-Die weitere Vorbereitung erfolgt anschließend mit dem Python-Skript `scripts/prepare_tiff.py`. Dabei wird die TIFF-Datei in ein einfaches 8-bit-PGM-Graustufenbild konvertiert, das vom C/OpenMP-Programm gelesen werden kann.
