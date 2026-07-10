@@ -83,6 +83,7 @@ Für die Python-Hilfsskripte:
 
 Für die C/OpenMP-Anwendung:
 - GCC mit OpenMP-Unterstützung
+(Unter Windows wurde GCC über MSYS2/UCRT64 verwendet)
 
 ### Installing
 
@@ -92,23 +93,43 @@ Repository klonen:
 git clone url
 cd 
 ```
-TIFF-Datei vorbereiten:
+
+### Daten vorbereiten
+
+Da TIFF-Dateien in C nur mit zusätzlichen Bibliotheken wie GDAL oder libtiff direkt gelesen werden können, wird die Sentinel-1-TIFF-Datei zunächst in ein einfaches PGM-Graustufenbild konvertiert. Dieses Format kann im C/OpenMP-Programm ohne externe Bildbibliotheken eingelesen werden:
+
 
 ```bash
 python scripts/prepare_tiff.py
 ```
 
-C/OpenMP-Programm kompilieren & ausführen:
+### C/OpenMP-Programm kompilieren & ausführen
 
 ```bash
 gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe
 ./main.exe
 ```
 
-Plots erzeugen:
+Das Programm führt aktuell den sequenziellen Gaussian-Filter und die OpenMP-Version aus. Dabei werden die Ausgabebilder und Benchmark-Ergebnisse erzeugt:
+
+```text
+output/gaussian_seq.pgm
+output/gaussian_omp.pgm
+results/benchmark_results.csv
+```
+
+### Plots erzeugen
 
 ```bash
 python scripts/plot_results.py
+```
+
+Die erzeugten Plots werden im Ordner `results/` gespeichert:
+
+```text
+results/runtime_vs_threads.png
+results/speedup_vs_threads.png
+results/efficiency_vs_threads.png
 ```
 
 ## Authors 
@@ -124,3 +145,4 @@ This project is licensed under the MIT License.
 ## Acknowledgments
 
 - OpenMP Scheduling overview: https://610yilingliu.github.io/2020/07/15/ScheduleinOpenMP/
+- S1 Products:  https://sentiwiki.copernicus.eu/web/s1-products
