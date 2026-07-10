@@ -52,7 +52,7 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Vergleich zwischen Originalbild und gefiltertem Bild
 
-Da das vollständige Sentinel-1-Bild sehr groß ist, wird für die visuelle Darstellung ein automatisch ausgewählter Ausschnitt mit sichtbarer Bildstruktur verwendet. Der dargestellte Ausschnitt hat eine Größe von `2048 x 2048` Pixeln und stammt aus dem Bereich `x = 0–2048`, `y = 2048–4096` des vollständigen Bildes (`26562 x 16681`). Die Benchmarks selbst werden weiterhin auf dem vollständigen Bild durchgeführt.
+Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Darstellung ein automatisch ausgewählter Ausschnitt mit sichtbarer Bildstruktur verwendet. Die gezeigten Bilder zeigen die normalisierten PGM-Daten, die aus der VV-TIFF-Messdatei erzeugt und von der C/OpenMP-Implementierung verarbeitet werden. Der Ausschnitt hat eine Größe von `2048 x 2048` Pixeln und stammt aus dem Bereich `x = 0–2048`, `y = 2048–4096` des vollständige PGM-Bild (`26562 x 16681`). Die Benchmarks selbst werden weiterhin auf dem vollständigen Bild durchgeführt.
 
 <table width="100%">
   <tr>
