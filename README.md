@@ -35,29 +35,53 @@ Es werden folgende Vergleichsvarianten betrachtet:
 
 ## Ergebnisse
 
+<!---
+
 Die folgenden Abbildungen werden später ergänzt:
 - Vergleich zwischen Originalbild und gefiltertem Bild
 - Laufzeitdiagramm in Abhängigkeit von der Thread-Anzahl
 - Speedup-Diagramm
 - Effizienz-Diagramm
 - Laufzeitvergleich der Scheduling-Strategien
+-->
+
+Die aktuellen Benchmark-Ergebnisse beziehen sich auf den Gaussian-Filter mit einem 3x3-Kernel. Die Bildgröße beträgt `26562 x 16681` Pixel. Getestet wurde auf Laptop 1 mit `static` Scheduling und unterschiedlichen Thread-Anzahlen.
+
+Die erzeugten Diagramme befinden sich im Ordner `results/`:
+
+- `runtime_vs_threads.png`
+- `speedup_vs_threads.png`
+- `efficiency_vs_threads.png`
+
+<table width="100%">
+  <tr>
+    <td width="33%"><img src="results/runtime_vs_threads.png" width="100%"></td>
+    <td width="33%"><img src="results/speedup_vs_threads.png" width="100%"></td>
+    <td width="33%"><img src="results/efficiency_vs_threads.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td>Runtime vs threads</td>
+    <td>Speedup vs Threads</td>
+    <td>Efficency vs threads</td>
+  </tr>
+</table>
 
 ### Laufzeit, Speedup und Effizienz
-| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
-| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | ----------------: | ----------------: | 
-| Laptop 1 | xxx | xxx | 1 | static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | 2 | static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | 4 | static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | 8 | static | xxx s | xxx | xxx |
-| Laptop 1 | xxx | xxx | 16 | static | xxx s | xxx | xxx |
+| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
+| ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: | -------: |
+| Laptop 1 | 26562 x 16681 | 3x3 | 1 | static | 3.154 s | 0.809 | 0.809 | 1267.66 MB |
+| Laptop 1 | 26562 x 16681 | 3x3 | 2 | static | 1.600 s | 1.594 | 0.797 | 1267.66 MB |
+| Laptop 1 | 26562 x 16681 | 3x3 | 4 | static | 0.931 s | 2.740 | 0.685 | 1267.66 MB |
+| Laptop 1 | 26562 x 16681 | 3x3 | 8 | static | 0.625 s | 4.082 | 0.510 | 1267.66 MB |
+| Laptop 1 | 26562 x 16681 | 3x3 | 16 | static | 0.488 s | 5.227 | 0.327 | 1267.66 MB |
 
 
 ### Scheduling-Vergleich
-| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | 
-| ------ | --------: | ------------: | -----------------: | ---------------: | ----------------: | 
-| Laptop 1 | xxx | xxx | 8 | static | xxx s |
-| Laptop 1 | xxx | xxx | 8 | dynamic | xxx s |
-| Laptop 1 | xxx | xxx | 8 | guided | xxx s |
+| Laptop | Bildgröße | Kernel | Threads | Scheduling | Laufzeit |
+| ------ | --------: | -----: | ------: | ---------- | -------: |
+| Laptop 1 | 26562 x 16681 | 3x3 | 8 | static | offen |
+| Laptop 1 | 26562 x 16681 | 3x3 | 8 | dynamic | offen |
+| Laptop 1 | 26562 x 16681 | 3x3 | 8 | guided | offen |
 
 ## Interpretation
 Die Interpretation wird nach Durchführung der Benchmarks ergänzt.

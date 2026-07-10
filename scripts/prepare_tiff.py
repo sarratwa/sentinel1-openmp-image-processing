@@ -63,7 +63,7 @@ def prepare_tiff(input_path: Path, output_path: Path) -> None:
 
 
 def main() -> None:
-    input_path = Path("data\s1a-iw-grd-vv-20260626t165239-20260626t165304-065143-08362d-001.tiff")
+    input_path = Path("data\s1c-iw-grd-vv-20260710t062658-20260710t062723-008477-010c75-001.tiff")
     output_path = Path("output/input.pgm")
 
     if not input_path.exists():
