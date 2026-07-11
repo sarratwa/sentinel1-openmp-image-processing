@@ -46,9 +46,17 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Sequenzielle Baseline
 
+<!---
 | Filter | Bildgröße | Kernel | Scheduling | Laufzeit |
 | ------ | --------: | -----: | ---------- | -------: |
 | Gaussian | 26562 x 16681 | 3x3 | none | 2.551 s |
+-->
+
+| Filter | Bildgröße | Kernel | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) |
+| ------ | --------: | -----: | ---------- | --------------: | ------------------------: |
+| Gaussian | 26562 x 16681 | 3x3 | none | 2.802 s | 2.978 s ± 0.243 s |
+
+*Alle Werte basieren auf 5 Wiederholungen; für Speedup/Effizienz wird jeweils die schnellste Laufzeit (min) verwendet, da Rauschen die Laufzeit nur verlängern, nie verkürzen kann.*
 
 ### Vergleich zwischen Originalbild und gefiltertem Bild
 
@@ -82,6 +90,7 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
   </tr>
 </table>
 
+<!---
 | Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
 | ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: | -------: |
 | Gaussian | 26562 x 16681 | 3x3 | 1 | static | 1.616 s | 1.095 | 1.095 | 5070.66 MB |
@@ -89,6 +98,15 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
 | Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.442 s | 4.005 | 1.001 | 5070.66 MB |
 | Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.331 s | 5.347 | 0.668 | 5070.66 MB |
 | Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.235 s | 7.532 | 0.471 | 5070.66 MB |
+-->
+
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
+| ------ | --------: | -----: | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
+| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 2.775 s | 2.826 s ± 0.048 s | 1.010 | 1.010 |
+| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 1.459 s | 1.921 s ± 0.044 s | 1.920 | 0.960 |
+| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.845 s | 0.858 s ± 0.012 s | 3.316 | 0.829 |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.526 s | 0.589 s ± 0.066 s | 5.327 | 0.666 |
+| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.514 s | 0.522 s ± 0.005 s | 5.451 | 0.341 |
 
 ### Bildgrößenvergleich
 
@@ -101,14 +119,35 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
 
 ### Scheduling-Vergleich
 
-Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl (8) verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`. Diese Messung ist unabhängig vom Thread-Skalierungs-Benchmark oben und wurde separat durchgeführt (daher die geringfügige Abweichung des `static`-Werts von der obigen Tabelle).
-
+<!---
 | Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
 | ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: |
 | Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.329 s | 5.380 | 0.672 |
 | Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | 0.261 s | 6.782 | 0.848 |
 | Gaussian | 26562 x 16681 | 3x3 | 8 | guided | 0.299 s | 5.920 | 0.740 |
+-->
 
+Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl (8) verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`.
+
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
+| ------ | --------: | -----: | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.526 s | 0.545 s ± 0.033 s | 5.327 | 0.666 |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | 0.521 s | 0.533 s ± 0.010 s | 5.378 | 0.672 |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | 0.516 s | 0.527 s ± 0.007 s | 5.430 | 0.679 |
+
+`guided` performt hier am besten, gefolgt von `dynamic`, dann `static` — konsistent mit einem früheren Testlauf auf derselben Maschine. Dies ist etwas überraschend, da die Zeilen des Bildes annähernd gleich teuer zu verarbeiten sind, wodurch `static` theoretisch keinen Lastungleichgewicht-Nachteil haben sollte. Eine plausible Erklärung ist, dass auf einer Laptop-CPU mit Turbo-Boost und thermischer Drosselung einzelne Kerne zeitweise langsamer laufen; `dynamic`/`guided` können sich daran anpassen, `static`s feste Vorab-Zuteilung nicht.
+
+### Kernel-Größenvergleich
+
+Für den Kernel-Größenvergleich wird eine feste Bildgröße und eine feste Thread-Anzahl (8, schedule=static) verwendet. Die Gaussian-Kernel werden aus den Binomialkoeffizienten des Pascal'schen Dreiecks erzeugt — ein Standardverfahren zur Konstruktion diskreter Gauß-Approximationen, das für 3x3 exakt den ursprünglich verwendeten Kernel reproduziert.
+
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Sequenziell (min) | OpenMP (min) | Speedup | Effizienz |
+| ------ | --------: | -----: | ------: | ---------- | ------------------: | ------------: | ------: | --------: |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 2.956 s | 0.541 s | 5.464 | 0.683 |
+| Gaussian | 26562 x 16681 | 5x5 | 8 | static | 7.657 s | 1.162 s | 6.589 | 0.824 |
+| Gaussian | 26562 x 16681 | 7x7 | 8 | static | 14.522 s | 2.186 s | 6.643 | 0.830 |
+
+Die Effizienz steigt mit der Kernelgröße (0.683 → 0.824 → 0.830). Dies ist plausibel: größere Kernel bedeuten mehr Rechenaufwand pro Pixel, wodurch sich der fixe Overhead der OpenMP-Parallelisierung (Thread-Erzeugung, Scheduling) über mehr Nutzarbeit verteilt.
 
 ## Interpretation
 Die Interpretation wird nach Durchführung der Benchmarks ergänzt.

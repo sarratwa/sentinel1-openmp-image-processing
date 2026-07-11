@@ -3,7 +3,37 @@
 
 #include "image_io.h"
 
-void gaussian_filter_sequential(Image input, Image output);
-void gaussian_filter_openmp(Image input, Image output);
+/*
+    A square convolution kernel.
+
+    weights is a flattened size*size array of integer weights
+    (row-major). sum is the normalization divisor (sum of all weights).
+*/
+typedef struct {
+    int size;     /* must be odd: 3, 5, 7, ... */
+    float sum;
+    int *weights; /* owned by this struct, free with free_kernel() */
+} Kernel;
+
+/*
+    Generates a discrete binomial-approximation Gaussian kernel of the
+    given odd size using Pascal's triangle. This is the standard way
+    to build integer Gaussian-like kernels: the 1D binomial coefficients
+    of row (size - 1) converge to a Gaussian by the de Moivre-Laplace
+    theorem, and the 2D kernel is their outer product.
+
+    size=3 reproduces the original hand-written kernel:
+        1 2 1
+        2 4 2
+        1 2 1
+    exactly, so existing 3x3 results are unaffected.
+*/
+Kernel generate_binomial_kernel(int size);
+
+/* Frees the weights array owned by the kernel. */
+void free_kernel(Kernel kernel);
+
+void gaussian_filter_sequential(Image input, Image output, Kernel kernel);
+void gaussian_filter_openmp(Image input, Image output, Kernel kernel);
 
 #endif

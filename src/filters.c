@@ -1,90 +1,133 @@
 #include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "filters.h"
 
-static void copy_borders(Image input, Image output) {
-    int width = input.width;
-    int height = input.height;
+/*
+    Computes 1D binomial (Pascal's triangle) coefficients for row n.
+    Row n has n+1 coefficients: C(n,0), C(n,1), ..., C(n,n).
+*/
+static void binomial_row(int n, int *out) {
+    out[0] = 1;
 
-    for (int x = 0; x < width; x++) {
-        output.data[x] = input.data[x];
-        output.data[(height - 1) * width + x] =
-            input.data[(height - 1) * width + x];
-    }
-
-    for (int y = 0; y < height; y++) {
-        output.data[y * width] = input.data[y * width];
-        output.data[y * width + width - 1] =
-            input.data[y * width + width - 1];
+    for (int k = 1; k <= n; k++) {
+        /* out[k] = out[k-1] * (n - k + 1) / k, computed iteratively
+           to avoid overflow from computing full factorials. */
+        out[k] = (int)((long long)out[k - 1] * (n - k + 1) / k);
     }
 }
 
-void gaussian_filter_sequential(Image input, Image output) {
+Kernel generate_binomial_kernel(int size) {
+    if (size < 1 || size % 2 == 0) {
+        fprintf(stderr, "Error: kernel size must be a positive odd number (got %d).\n", size);
+        exit(EXIT_FAILURE);
+    }
+
+    int row_degree = size - 1;
+
+    int *row = malloc((size_t)size * sizeof(int));
+
+    if (!row) {
+        fprintf(stderr, "Error: could not allocate binomial row.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    binomial_row(row_degree, row);
+
+    int *weights = malloc((size_t)size * (size_t)size * sizeof(int));
+
+    if (!weights) {
+        fprintf(stderr, "Error: could not allocate kernel weights.\n");
+        free(row);
+        exit(EXIT_FAILURE);
+    }
+
+    float row_sum = 0.0f;
+
+    for (int i = 0; i < size; i++) {
+        row_sum += (float)row[i];
+    }
+
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            weights[y * size + x] = row[y] * row[x];
+        }
+    }
+
+    free(row);
+
+    Kernel kernel;
+    kernel.size = size;
+    kernel.sum = row_sum * row_sum;
+    kernel.weights = weights;
+
+    return kernel;
+}
+
+void free_kernel(Kernel kernel) {
+    free(kernel.weights);
+}
+
+/*
+    Sequential Gaussian filter, generalized to any odd kernel size.
+
+    The entire input is first copied to output (this correctly handles
+    borders of any width: border_width = kernel.size / 2). Interior
+    pixels are then overwritten with the convolved result.
+*/
+void gaussian_filter_sequential(Image input, Image output, Kernel kernel) {
     int width = input.width;
     int height = input.height;
+    int radius = kernel.size / 2;
 
-    const int kernel[3][3] = {
-        {1, 2, 1},
-        {2, 4, 2},
-        {1, 2, 1}
-    };
+    memcpy(output.data, input.data, (size_t)width * (size_t)height * sizeof(float));
 
-    const float kernel_sum = 16.0f;
-
-    copy_borders(input, output);
-
-    for (int y = 1; y < height - 1; y++) {
-        for (int x = 1; x < width - 1; x++) {
+    for (int y = radius; y < height - radius; y++) {
+        for (int x = radius; x < width - radius; x++) {
             float sum = 0.0f;
 
-            for (int ky = -1; ky <= 1; ky++) {
-                for (int kx = -1; kx <= 1; kx++) {
+            for (int ky = -radius; ky <= radius; ky++) {
+                for (int kx = -radius; kx <= radius; kx++) {
                     float pixel = input.data[(y + ky) * width + (x + kx)];
-                    int weight = kernel[ky + 1][kx + 1];
+                    int weight = kernel.weights[(ky + radius) * kernel.size + (kx + radius)];
                     sum += pixel * (float)weight;
                 }
             }
 
-            output.data[y * width + x] = sum / kernel_sum;
+            output.data[y * width + x] = sum / kernel.sum;
         }
     }
 }
 
-void gaussian_filter_openmp(Image input, Image output) {
+/*
+    Parallel Gaussian filter with OpenMP, generalized to any odd kernel size.
+
+    schedule(runtime) defers the scheduling decision to whatever was set
+    via omp_set_schedule() in main() before this function is called.
+*/
+void gaussian_filter_openmp(Image input, Image output, Kernel kernel) {
     int width = input.width;
     int height = input.height;
+    int radius = kernel.size / 2;
 
-    const int kernel[3][3] = {
-        {1, 2, 1},
-        {2, 4, 2},
-        {1, 2, 1}
-    };
+    memcpy(output.data, input.data, (size_t)width * (size_t)height * sizeof(float));
 
-    const float kernel_sum = 16.0f;
-
-    copy_borders(input, output);
-
-    /*
-        schedule(runtime) defers the scheduling decision to whatever
-        was set via omp_set_schedule() in main() before this function
-        is called. This lets main() run the exact same filter with
-        static, dynamic, or guided scheduling without needing three
-        separate filter functions.
-    */
     #pragma omp parallel for schedule(runtime)
-    for (int y = 1; y < height - 1; y++) {
-        for (int x = 1; x < width - 1; x++) {
+    for (int y = radius; y < height - radius; y++) {
+        for (int x = radius; x < width - radius; x++) {
             float sum = 0.0f;
 
-            for (int ky = -1; ky <= 1; ky++) {
-                for (int kx = -1; kx <= 1; kx++) {
+            for (int ky = -radius; ky <= radius; ky++) {
+                for (int kx = -radius; kx <= radius; kx++) {
                     float pixel = input.data[(y + ky) * width + (x + kx)];
-                    int weight = kernel[ky + 1][kx + 1];
+                    int weight = kernel.weights[(ky + radius) * kernel.size + (kx + radius)];
                     sum += pixel * (float)weight;
                 }
             }
 
-            output.data[y * width + x] = sum / kernel_sum;
+            output.data[y * width + x] = sum / kernel.sum;
         }
     }
 }
