@@ -2,13 +2,14 @@
 
 void write_csv_header(FILE *csv) {
     fprintf(csv,
-            "filter,version,width,height,kernel,threads,schedule,runtime,speedup,efficiency,memory_mb\n");
+            "filter,version,benchmark_type,width,height,kernel,threads,schedule,runtime,speedup,efficiency,memory_mb\n");
 }
 
 void write_csv_row(
     FILE *csv,
     const char *filter,
     const char *version,
+    const char *benchmark_type,
     Image image,
     int kernel_size,
     int threads,
@@ -20,9 +21,10 @@ void write_csv_row(
     double memory_mb = estimate_memory_mb(image, 3);
 
     fprintf(csv,
-            "%s,%s,%d,%d,%d,%d,%s,%.6f,%.3f,%.3f,%.2f\n",
+            "%s,%s,%s,%d,%d,%d,%d,%s,%.6f,%.3f,%.3f,%.2f\n",
             filter,
             version,
+            benchmark_type,
             image.width,
             image.height,
             kernel_size,

@@ -84,11 +84,11 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
 
 | Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
 | ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: | -------: |
-| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 3.154 s | 0.809 | 0.809 | 1267.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 1.600 s | 1.594 | 0.797 | 1267.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.931 s | 2.740 | 0.685 | 1267.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.625 s | 4.082 | 0.510 | 1267.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.488 s | 5.227 | 0.327 | 1267.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 1.616 s | 1.095 | 1.095 | 5070.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 0.832 s | 2.127 | 1.064 | 5070.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.442 s | 4.005 | 1.001 | 5070.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.331 s | 5.347 | 0.668 | 5070.66 MB |
+| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.235 s | 7.532 | 0.471 | 5070.66 MB |
 
 ### Bildgrößenvergleich
 
@@ -101,13 +101,13 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
 
 ### Scheduling-Vergleich
 
-Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`.
+Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl (8) verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`. Diese Messung ist unabhängig vom Thread-Skalierungs-Benchmark oben und wurde separat durchgeführt (daher die geringfügige Abweichung des `static`-Werts von der obigen Tabelle).
 
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit |
-| ------ | --------: | -----: | ------: | ---------- | -------: |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.625 s |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | offen |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | offen |
+| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
+| ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.329 s | 5.380 | 0.672 |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | 0.261 s | 6.782 | 0.848 |
+| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | 0.299 s | 5.920 | 0.740 |
 
 
 ## Interpretation

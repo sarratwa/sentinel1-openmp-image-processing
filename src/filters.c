@@ -64,7 +64,14 @@ void gaussian_filter_openmp(Image input, Image output) {
 
     copy_borders(input, output);
 
-    #pragma omp parallel for schedule(static)
+    /*
+        schedule(runtime) defers the scheduling decision to whatever
+        was set via omp_set_schedule() in main() before this function
+        is called. This lets main() run the exact same filter with
+        static, dynamic, or guided scheduling without needing three
+        separate filter functions.
+    */
+    #pragma omp parallel for schedule(runtime)
     for (int y = 1; y < height - 1; y++) {
         for (int x = 1; x < width - 1; x++) {
             float sum = 0.0f;

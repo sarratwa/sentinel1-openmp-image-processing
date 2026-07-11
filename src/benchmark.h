@@ -11,6 +11,7 @@ void write_csv_row(
     FILE *csv,
     const char *filter,
     const char *version,
+    const char *benchmark_type,
     Image image,
     int kernel_size,
     int threads,
