@@ -229,6 +229,98 @@ int main(int argc, char **argv) {
     printf("\nSequential output saved to: %s\n", output_seq_path);
     printf("OpenMP output saved to: %s\n", output_omp_path);
 
+    /* ------------------------------------------------------------
+       Lee filter (SAR speckle filter), optional extension task.
+
+       Unlike the Gaussian filter, this is an adaptive filter based
+       on local statistics (mean/variance) rather than a fixed
+       convolution kernel, so it gets its own Image outputs and its
+       own thread-scaling sweep, mirroring the Gaussian sweep above.
+
+       NOTE ON LIMITATIONS: the noise_variance parameter assumes a
+       nominal ENL of 4.9 (typical for Sentinel-1 IW GRDH products),
+       not a value calibrated for this specific scene. See the
+       README limitations section for why exact radiometric
+       calibration isn't attempted in this pipeline.
+    */
+    const char *lee_seq_path = "output/lee_seq.tif";
+    const char *lee_omp_path = "output/lee_omp.tif";
+
+    LeeFilterParams lee_params;
+    lee_params.window_size = 7;
+    lee_params.noise_variance = 1.0f / 4.9f;
+
+    Image lee_output_seq = create_empty_image(input.width, input.height);
+    Image lee_output_omp = create_empty_image(input.width, input.height);
+
+    TimingResult lee_seq_timing = time_lee_filter(
+        lee_filter_sequential, input, lee_output_seq, lee_params, REPETITIONS
+    );
+    double lee_seq_runtime = lee_seq_timing.min;
+
+    printf("\nLee filter (window=%dx%d, sequential) finished.\n",
+           lee_params.window_size, lee_params.window_size);
+    printf("Sequential runtime: min=%.6f s, mean=%.6f s, stddev=%.6f s (n=%d)\n",
+           lee_seq_timing.min, lee_seq_timing.mean, lee_seq_timing.stddev, REPETITIONS);
+
+    write_csv_row(
+        csv, "lee", "sequential", "baseline",
+        input, lee_params.window_size, 1, "none", lee_seq_timing, 1.0, 1.0
+    );
+
+    write_tiff(lee_seq_path, lee_output_seq, input_path);
+
+    printf("\nLee filter OpenMP benchmark (schedule=static, threads varying, %d reps each):\n",
+           REPETITIONS);
+    printf("Threads,RuntimeMin,RuntimeMean,RuntimeStddev,Speedup,Efficiency\n");
+
+    omp_set_schedule(omp_sched_static, 0);
+    omp_set_num_threads(2);
+    lee_filter_openmp(input, lee_output_omp, lee_params); /* warm-up */
+
+    int all_lee_thread_counts_correct = 1;
+
+    for (int i = 0; i < number_of_tests; i++) {
+        int threads = thread_counts[i];
+        omp_set_num_threads(threads);
+
+        TimingResult t = time_lee_filter(
+            lee_filter_openmp, input, lee_output_omp, lee_params, REPETITIONS
+        );
+
+        double speedup = lee_seq_runtime / t.min;
+        double efficiency = speedup / (double)threads;
+
+        printf("%d,%.6f,%.6f,%.6f,%.3f,%.3f\n",
+               threads, t.min, t.mean, t.stddev, speedup, efficiency);
+
+        write_csv_row(
+            csv, "lee", "openmp", "thread_scaling",
+            input, lee_params.window_size, threads, "static", t, speedup, efficiency
+        );
+
+        if (!images_are_equal(lee_output_seq, lee_output_omp)) {
+            all_lee_thread_counts_correct = 0;
+            fprintf(stderr,
+                    "Warning: Lee filter output mismatch at %d threads.\n",
+                    threads);
+        }
+    }
+
+    if (all_lee_thread_counts_correct) {
+        printf("\nCorrectness check: Lee filter sequential and OpenMP outputs are equal for all thread counts.\n");
+    } else {
+        printf("\nCorrectness check: Lee filter mismatches found (see warnings above).\n");
+    }
+
+    write_tiff(lee_omp_path, lee_output_omp, input_path);
+
+    printf("\nLee filter sequential output saved to: %s\n", lee_seq_path);
+    printf("Lee filter OpenMP output saved to: %s\n", lee_omp_path);
+
+    free_image(lee_output_seq);
+    free_image(lee_output_omp);
+
     fclose(csv);
     printf("Benchmark results saved to: %s\n", csv_path);
 

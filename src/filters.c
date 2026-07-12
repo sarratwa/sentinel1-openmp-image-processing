@@ -131,3 +131,107 @@ void gaussian_filter_openmp(Image input, Image output, Kernel kernel) {
         }
     }
 }
+
+/*
+    Computes the Lee-filtered value for a single pixel from its local
+    window statistics. Shared by the sequential and OpenMP versions so
+    the adaptive-weight formula only needs to be correct in one place.
+
+    Lee filter formula:
+        Ci^2 = local variance / local mean^2   (local coefficient of variation squared)
+        Cu^2 = assumed noise variance (from ENL)
+        weight = 0                              if Ci^2 <= Cu^2 (looks like pure noise -> smooth fully)
+        weight = 1 - Cu^2 / Ci^2                otherwise        (looks like real structure -> preserve it)
+        output = mean + weight * (center_pixel - mean)
+*/
+static inline float lee_filter_pixel(
+    float center_pixel,
+    float mean,
+    float variance,
+    float noise_variance
+) {
+    if (variance < 0.0f) {
+        variance = 0.0f;
+    }
+
+    float ci_squared;
+
+    if (mean != 0.0f) {
+        ci_squared = variance / (mean * mean);
+    } else {
+        ci_squared = 0.0f;
+    }
+
+    float weight;
+
+    if (ci_squared > noise_variance) {
+        weight = 1.0f - (noise_variance / ci_squared);
+    } else {
+        weight = 0.0f;
+    }
+
+    return mean + weight * (center_pixel - mean);
+}
+
+void lee_filter_sequential(Image input, Image output, LeeFilterParams params) {
+    int width = input.width;
+    int height = input.height;
+    int radius = params.window_size / 2;
+    int window_pixel_count = params.window_size * params.window_size;
+
+    memcpy(output.data, input.data, (size_t)width * (size_t)height * sizeof(float));
+
+    for (int y = radius; y < height - radius; y++) {
+        for (int x = radius; x < width - radius; x++) {
+            float sum = 0.0f;
+            float sum_sq = 0.0f;
+
+            for (int wy = -radius; wy <= radius; wy++) {
+                for (int wx = -radius; wx <= radius; wx++) {
+                    float pixel = input.data[(y + wy) * width + (x + wx)];
+                    sum += pixel;
+                    sum_sq += pixel * pixel;
+                }
+            }
+
+            float mean = sum / (float)window_pixel_count;
+            float variance = sum_sq / (float)window_pixel_count - mean * mean;
+            float center_pixel = input.data[y * width + x];
+
+            output.data[y * width + x] =
+                lee_filter_pixel(center_pixel, mean, variance, params.noise_variance);
+        }
+    }
+}
+
+void lee_filter_openmp(Image input, Image output, LeeFilterParams params) {
+    int width = input.width;
+    int height = input.height;
+    int radius = params.window_size / 2;
+    int window_pixel_count = params.window_size * params.window_size;
+
+    memcpy(output.data, input.data, (size_t)width * (size_t)height * sizeof(float));
+
+    #pragma omp parallel for schedule(runtime)
+    for (int y = radius; y < height - radius; y++) {
+        for (int x = radius; x < width - radius; x++) {
+            float sum = 0.0f;
+            float sum_sq = 0.0f;
+
+            for (int wy = -radius; wy <= radius; wy++) {
+                for (int wx = -radius; wx <= radius; wx++) {
+                    float pixel = input.data[(y + wy) * width + (x + wx)];
+                    sum += pixel;
+                    sum_sq += pixel * pixel;
+                }
+            }
+
+            float mean = sum / (float)window_pixel_count;
+            float variance = sum_sq / (float)window_pixel_count - mean * mean;
+            float center_pixel = input.data[y * width + x];
+
+            output.data[y * width + x] =
+                lee_filter_pixel(center_pixel, mean, variance, params.noise_variance);
+        }
+    }
+}

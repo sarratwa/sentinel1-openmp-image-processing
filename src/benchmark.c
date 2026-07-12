@@ -49,6 +49,51 @@ TimingResult time_filter(
     return result;
 }
 
+TimingResult time_lee_filter(
+    LeeFilterFn filter_fn,
+    Image input,
+    Image output,
+    LeeFilterParams params,
+    int repetitions
+) {
+    double *times = malloc((size_t)repetitions * sizeof(double));
+    double sum = 0.0;
+    double min_time = 1e18;
+
+    for (int r = 0; r < repetitions; r++) {
+        double start = omp_get_wtime();
+        filter_fn(input, output, params);
+        double end = omp_get_wtime();
+
+        double elapsed = end - start;
+        times[r] = elapsed;
+        sum += elapsed;
+
+        if (elapsed < min_time) {
+            min_time = elapsed;
+        }
+    }
+
+    double mean = sum / (double)repetitions;
+    double variance_sum = 0.0;
+
+    for (int r = 0; r < repetitions; r++) {
+        double diff = times[r] - mean;
+        variance_sum += diff * diff;
+    }
+
+    double stddev = sqrt(variance_sum / (double)repetitions);
+
+    free(times);
+
+    TimingResult result;
+    result.min = min_time;
+    result.mean = mean;
+    result.stddev = stddev;
+
+    return result;
+}
+
 void write_csv_header(FILE *csv) {
     fprintf(csv,
             "filter,version,benchmark_type,width,height,kernel,threads,schedule,"

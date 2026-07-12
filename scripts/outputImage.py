@@ -64,38 +64,94 @@ def read_image(path: Path) -> np.ndarray:
     return image
 
 
+def find_valid_data_bounding_box(
+    image: np.ndarray,
+    row_col_valid_threshold: float = 0.5,
+) -> tuple[int, int, int, int]:
+    """
+    Trims the image down to the region that actually contains data,
+    excluding large no-data borders common at Sentinel-1 swath edges.
+
+    A row/column is considered "valid" if at least
+    row_col_valid_threshold of its pixels are finite and > 0.
+    The returned box is the smallest rectangle enclosing all valid
+    rows and columns from the outside in.
+
+    This does not guarantee every pixel inside the box is valid data
+    (some no-data patches can still exist deeper inside the swath) --
+    it only removes the large solid no-data borders. The crop search
+    below adds a second, stricter check on top of this.
+    """
+    finite = np.isfinite(image)
+    valid_mask = finite & (image > 0)
+
+    row_valid_ratio = valid_mask.mean(axis=1)
+    col_valid_ratio = valid_mask.mean(axis=0)
+
+    valid_rows = np.where(row_valid_ratio >= row_col_valid_threshold)[0]
+    valid_cols = np.where(col_valid_ratio >= row_col_valid_threshold)[0]
+
+    if valid_rows.size == 0 or valid_cols.size == 0:
+        print(
+            "Warning: could not find a confident valid-data region; "
+            "using the full image instead."
+        )
+        return 0, image.shape[0], 0, image.shape[1]
+
+    row_start, row_end = int(valid_rows[0]), int(valid_rows[-1]) + 1
+    col_start, col_end = int(valid_cols[0]), int(valid_cols[-1]) + 1
+
+    print("Valid-data bounding box (excludes no-data swath borders):")
+    print(f"  rows: {row_start} to {row_end}")
+    print(f"  cols: {col_start} to {col_end}")
+
+    return row_start, row_end, col_start, col_end
+
+
 def find_interesting_crop_position(
     image: np.ndarray,
     crop_size: int = 2048,
     step: int = 1024,
+    min_valid_ratio: float = 0.98,
 ) -> tuple[int, int, int, int]:
     """
     Finds a crop containing visible texture and contrast.
 
     The crop position is calculated only from the original image.
     The exact same coordinates are then used for the filtered image.
+
+    min_valid_ratio is intentionally strict (98%, not the old 5%):
+    a crop with a large no-data (solid black) region can still pass
+    a lax ratio check while looking nothing like a real SAR scene.
+    Searching is also restricted to the valid-data bounding box, so
+    swath-edge no-data borders are excluded from consideration
+    entirely rather than merely down-weighted.
     """
+    box_row_start, box_row_end, box_col_start, box_col_end = (
+        find_valid_data_bounding_box(image)
+    )
+
     height, width = image.shape
 
-    crop_height = min(crop_size, height)
-    crop_width = min(crop_size, width)
+    crop_height = min(crop_size, box_row_end - box_row_start)
+    crop_width = min(crop_size, box_col_end - box_col_start)
 
-    max_y = max(0, height - crop_height)
-    max_x = max(0, width - crop_width)
+    max_y = max(box_row_start, box_row_end - crop_height)
+    max_x = max(box_col_start, box_col_end - crop_width)
 
-    y_positions = list(range(0, max_y + 1, step))
-    x_positions = list(range(0, max_x + 1, step))
+    y_positions = list(range(box_row_start, max_y + 1, step))
+    x_positions = list(range(box_col_start, max_x + 1, step))
 
-    # Ensure the final edge is checked as well.
-    if y_positions[-1] != max_y:
+    if not y_positions or y_positions[-1] != max_y:
         y_positions.append(max_y)
 
-    if x_positions[-1] != max_x:
+    if not x_positions or x_positions[-1] != max_x:
         x_positions.append(max_x)
 
     best_score = float("-inf")
-    best_x = 0
-    best_y = 0
+    best_x = box_col_start
+    best_y = box_row_start
+    found_valid_crop = False
 
     for y in y_positions:
         for x in x_positions:
@@ -109,9 +165,12 @@ def find_interesting_crop_position(
 
             nonzero_ratio = nonzero.size / crop.size
 
-            # Ignore nearly empty areas.
-            if nonzero_ratio < 0.05:
+            # Reject any crop that isn't almost entirely valid data,
+            # instead of merely down-weighting no-data pixels.
+            if nonzero_ratio < min_valid_ratio:
                 continue
+
+            found_valid_crop = True
 
             p50 = np.percentile(nonzero, 50)
             p95 = np.percentile(nonzero, 95)
@@ -131,6 +190,13 @@ def find_interesting_crop_position(
                 best_score = score
                 best_x = x
                 best_y = y
+
+    if not found_valid_crop:
+        print(
+            f"Warning: no crop met the {min_valid_ratio:.0%} valid-data "
+            "threshold; falling back to the first searched position. "
+            "The preview image may include some no-data area."
+        )
 
     print("\nSelected crop:")
     print(f"  Full image size: {width} x {height}")
@@ -220,13 +286,14 @@ def save_comparison(
     path: Path,
     original: np.ndarray,
     gaussian: np.ndarray,
+    lee: np.ndarray,
 ) -> None:
     """
     Creates one side-by-side image for documentation or presentation.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    figure, axes = plt.subplots(1, 2, figsize=(12, 6))
+    figure, axes = plt.subplots(1, 3, figsize=(18, 6))
 
     axes[0].imshow(original, cmap="gray", vmin=0, vmax=255)
     axes[0].set_title("Original Sentinel-1 TIFF")
@@ -235,6 +302,10 @@ def save_comparison(
     axes[1].imshow(gaussian, cmap="gray", vmin=0, vmax=255)
     axes[1].set_title("After Gaussian Filter")
     axes[1].axis("off")
+
+    axes[2].imshow(lee, cmap="gray", vmin=0, vmax=255)
+    axes[2].set_title("After Lee Filter")
+    axes[2].axis("off")
 
     figure.tight_layout()
     figure.savefig(path, dpi=300, bbox_inches="tight")
@@ -276,6 +347,7 @@ def main() -> None:
 
     original_tiff = find_original_tiff(data_dir)
     gaussian_tiff = output_dir / "gaussian_seq.tif"
+    lee_tiff = output_dir / "lee_seq.tif"
 
     crop_size = 2048
     step = 1024
@@ -290,8 +362,29 @@ def main() -> None:
             f"  Gaussian: {gaussian.shape}"
         )
 
+    have_lee = lee_tiff.exists()
+
+    if have_lee:
+        lee = read_image(lee_tiff)
+
+        if original.shape != lee.shape:
+            raise ValueError(
+                "Original and Lee-filtered images have different dimensions:\n"
+                f"  Original: {original.shape}\n"
+                f"  Lee: {lee.shape}"
+            )
+    else:
+        print(
+            f"Warning: {lee_tiff} not found. Skipping the Lee filter panel "
+            "(run main.exe first to generate it)."
+        )
+        lee = None
+
     print_statistics("Original full image", original)
     print_statistics("Gaussian full image", gaussian)
+
+    if have_lee:
+        print_statistics("Lee full image", lee)
 
     crop_x, crop_y, crop_width, crop_height = (
         find_interesting_crop_position(
@@ -320,7 +413,17 @@ def main() -> None:
     print_statistics("Original raw crop", original_crop_raw)
     print_statistics("Gaussian raw crop", gaussian_crop_raw)
 
-    # Use the same brightness range for both previews.
+    if have_lee:
+        lee_crop_raw = crop_image(
+            lee,
+            crop_x,
+            crop_y,
+            crop_width,
+            crop_height,
+        )
+        print_statistics("Lee raw crop", lee_crop_raw)
+
+    # Use the same brightness range for all previews, so the comparison is fair.
     low, high = calculate_display_range(original_crop_raw)
 
     print("\nVisualization range:")
@@ -349,11 +452,26 @@ def main() -> None:
         gaussian_crop_display,
     )
 
-    save_comparison(
-        results_dir / "before_after_gaussian.png",
-        original_crop_display,
-        gaussian_crop_display,
-    )
+    if have_lee:
+        lee_crop_display = stretch_for_display(
+            lee_crop_raw,
+            low,
+            high,
+        )
+
+        save_png(
+            results_dir / "lee_crop.png",
+            lee_crop_display,
+        )
+
+        save_comparison(
+            results_dir / "before_after_gaussian.png",
+            original_crop_display,
+            gaussian_crop_display,
+            lee_crop_display,
+        )
+    else:
+        print("Skipping the 3-panel comparison figure since the Lee output is missing.")
 
     print("\nVisualization completed successfully.")
 

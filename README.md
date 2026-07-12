@@ -191,7 +191,7 @@ cd
 ### C/OpenMP-Programm kompilieren & ausführen
 
 ```bash
-gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe -lgdal
+gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe -lgdal -lm
 ./main.exe "data/sentinel_datei.tiff"
 ```
 

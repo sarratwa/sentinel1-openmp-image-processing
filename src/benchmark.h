@@ -24,6 +24,7 @@ typedef struct {
 } TimingResult;
 
 typedef void (*FilterFn)(Image input, Image output, Kernel kernel);
+typedef void (*LeeFilterFn)(Image input, Image output, LeeFilterParams params);
 
 /*
     Runs the given filter function `repetitions` times and returns
@@ -37,6 +38,15 @@ TimingResult time_filter(
     Image input,
     Image output,
     Kernel kernel,
+    int repetitions
+);
+
+/* Same as time_filter(), but for the Lee filter's different parameter type. */
+TimingResult time_lee_filter(
+    LeeFilterFn filter_fn,
+    Image input,
+    Image output,
+    LeeFilterParams params,
     int repetitions
 );
 

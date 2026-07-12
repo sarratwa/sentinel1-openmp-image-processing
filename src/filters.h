@@ -36,4 +36,25 @@ void free_kernel(Kernel kernel);
 void gaussian_filter_sequential(Image input, Image output, Kernel kernel);
 void gaussian_filter_openmp(Image input, Image output, Kernel kernel);
 
+/*
+    Lee filter parameters.
+
+    window_size: size of the square local-statistics window (odd: 3, 5, 7, ...)
+
+    noise_variance: the assumed noise variance Cu^2 = 1 / ENL, where ENL is
+    the equivalent number of looks. Sentinel-1 IW GRDH products are commonly
+    documented with ENL around 4.9 due to multi-looking during GRD processing,
+    which is the default used here (Cu^2 ~= 0.204). This is a nominal,
+    standard reference value, not a value calibrated for this specific
+    product/scene -- see the README limitations section for why exact
+    calibration isn't attempted here.
+*/
+typedef struct {
+    int window_size;
+    float noise_variance;
+} LeeFilterParams;
+
+void lee_filter_sequential(Image input, Image output, LeeFilterParams params);
+void lee_filter_openmp(Image input, Image output, LeeFilterParams params);
+
 #endif
