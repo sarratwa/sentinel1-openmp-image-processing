@@ -1,12 +1,40 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "benchmark.h"
 #include "filters.h"
 #include "image_io.h"
 
 #define REPETITIONS 5
+
+/*
+    Extracts the top-left sub_width x sub_height region of source into a
+    new, contiguous Image. Used for the image-size comparison: rather
+    than requiring separate pre-cropped TIFF files, sub-images are cut
+    directly from the already-loaded full-resolution input in memory.
+
+    Sizes larger than the source are clamped down to the source size
+    (relevant only if the source image is smaller than a requested
+    benchmark size).
+*/
+static Image extract_subimage(Image source, int sub_width, int sub_height) {
+    int width = (sub_width < source.width) ? sub_width : source.width;
+    int height = (sub_height < source.height) ? sub_height : source.height;
+
+    Image sub = create_empty_image(width, height);
+
+    for (int y = 0; y < height; y++) {
+        memcpy(
+            sub.data + (size_t)y * width,
+            source.data + (size_t)y * source.width,
+            (size_t)width * sizeof(float)
+        );
+    }
+
+    return sub;
+}
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -320,6 +348,96 @@ int main(int argc, char **argv) {
 
     free_image(lee_output_seq);
     free_image(lee_output_omp);
+
+    /* ------------------------------------------------------------
+       Image size comparison: fixed threads, fixed 3x3 kernel,
+       schedule=static, image size varying. Smaller sizes are cut
+       directly from the already-loaded full input (top-left region),
+       so no separate cropped TIFF files are needed. The full image
+       size is included using the input already in memory.
+       ------------------------------------------------------------ */
+    int image_size_candidates[] = {2048, 4096, 8192};
+    int number_of_size_candidates =
+        (int)(sizeof(image_size_candidates) / sizeof(image_size_candidates[0]));
+    int image_size_threads = 8;
+
+    Kernel kernel_for_size_comparison = generate_binomial_kernel(3);
+
+    printf("\nImage size comparison (threads=%d, schedule=static, kernel=3x3, %d reps each):\n",
+           image_size_threads, REPETITIONS);
+    printf("ImageSize,SeqRuntimeMin,OmpRuntimeMin,Speedup,Efficiency,MemoryMB\n");
+
+    omp_set_num_threads(image_size_threads);
+    omp_set_schedule(omp_sched_static, 0);
+
+    int all_image_sizes_correct = 1;
+
+    /* Loop runs one extra time (i == number_of_size_candidates) for the
+       full image size, reusing `input` directly instead of copying it. */
+    for (int i = 0; i <= number_of_size_candidates; i++) {
+        Image size_input;
+        int owns_size_input;
+
+        if (i < number_of_size_candidates) {
+            int size = image_size_candidates[i];
+            size_input = extract_subimage(input, size, size);
+            owns_size_input = 1;
+        } else {
+            size_input = input;
+            owns_size_input = 0;
+        }
+
+        Image size_output_seq = create_empty_image(size_input.width, size_input.height);
+        Image size_output_omp = create_empty_image(size_input.width, size_input.height);
+
+        TimingResult seq_t = time_filter(
+            gaussian_filter_sequential, size_input, size_output_seq,
+            kernel_for_size_comparison, REPETITIONS
+        );
+        TimingResult omp_t = time_filter(
+            gaussian_filter_openmp, size_input, size_output_omp,
+            kernel_for_size_comparison, REPETITIONS
+        );
+
+        double speedup = seq_t.min / omp_t.min;
+        double efficiency = speedup / (double)image_size_threads;
+        double memory_mb = estimate_memory_mb(size_input, 3);
+
+        printf("%dx%d,%.6f,%.6f,%.3f,%.3f,%.2f\n",
+               size_input.width, size_input.height,
+               seq_t.min, omp_t.min, speedup, efficiency, memory_mb);
+
+        write_csv_row(
+            csv, "gaussian", "sequential", "image_size_comparison",
+            size_input, 3, 1, "none", seq_t, 1.0, 1.0
+        );
+        write_csv_row(
+            csv, "gaussian", "openmp", "image_size_comparison",
+            size_input, 3, image_size_threads, "static", omp_t, speedup, efficiency
+        );
+
+        if (!images_are_equal(size_output_seq, size_output_omp)) {
+            all_image_sizes_correct = 0;
+            fprintf(stderr,
+                    "Warning: output mismatch at image size %dx%d.\n",
+                    size_input.width, size_input.height);
+        }
+
+        free_image(size_output_seq);
+        free_image(size_output_omp);
+
+        if (owns_size_input) {
+            free_image(size_input);
+        }
+    }
+
+    if (all_image_sizes_correct) {
+        printf("\nCorrectness check: all image sizes produced equal sequential/OpenMP outputs.\n");
+    } else {
+        printf("\nCorrectness check: mismatches found across image sizes (see warnings above).\n");
+    }
+
+    free_kernel(kernel_for_size_comparison);
 
     fclose(csv);
     printf("Benchmark results saved to: %s\n", csv_path);

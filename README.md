@@ -46,15 +46,12 @@ Die folgenden Abbildungen werden später ergänzt:
 
 ### Sequenzielle Baseline
 
-<!---
-| Filter | Bildgröße | Kernel | Scheduling | Laufzeit |
-| ------ | --------: | -----: | ---------- | -------: |
-| Gaussian | 26562 x 16681 | 3x3 | none | 2.551 s |
--->
-
-| Filter | Bildgröße | Kernel | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) |
-| ------ | --------: | -----: | ---------- | --------------: | ------------------------: |
-| Gaussian | 26562 x 16681 | 3x3 | none | 2.802 s | 2.978 s ± 0.243 s |
+| Laptop | Filter | Bildgröße | Kernel | Laufzeit (min) | Laufzeit (mean ± stddev) |
+| ------ | ------ | --------: | -----: | --------------: | ------------------------: |
+| Laptop 1 | Gaussian | 26531 × 16670 | 3×3 | 3.785 s | 4.182 s ± 0.301 s |
+| Laptop 1 | Lee | 26531 × 16670 | 7×7 | 22.080 s | 23.009 s ± 0.815 s |
+| Laptop 2 | Gaussian | 26531 × 16670 | 3×3 | xxx | xxx |
+| Laptop 2 | Lee | 26531 × 16670 | 7×7 | xxx | xxx |
 
 *Alle Werte basieren auf 5 Wiederholungen; für Speedup/Effizienz wird jeweils die schnellste Laufzeit (min) verwendet, da Rauschen die Laufzeit nur verlängern, nie verkürzen kann.*
 
@@ -75,13 +72,15 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
   </tr>
 </table>
 
-### OpenMP-Thread-Skalierung
+### OpenMP-Thread-Skalierung des Gaussian-Filters
+
+Für die Thread-Skalierung wird ein fester Gaussian-Kernel von `3×3` verwendet. Die OpenMP-Version wird mit `static` Scheduling und unterschiedlichen Thread-Anzahlen ausgeführt.
 
 <table width="100%">
   <tr>
-    <td width="33%"><img src="results/runtime_vs_threads.png" width="100%"></td>
-    <td width="33%"><img src="results/speedup_vs_threads.png" width="100%"></td>
-    <td width="33%"><img src="results/efficiency_vs_threads.png" width="100%"></td>
+    <td width="33%"><img src="results/Laptop1_runtime_vs_threads.png" width="100%"></td>
+    <td width="33%"><img src="results/Laptop1_speedup_vs_threads.png" width="100%"></td>
+    <td width="33%"><img src="results/Laptop1_efficiency_vs_threads.png" width="100%"></td>
   </tr>
   <tr>
     <td>Runtime vs Threads</td>
@@ -90,64 +89,86 @@ Da das vollständige verarbeitete Bild sehr groß ist, wird für die visuelle Da
   </tr>
 </table>
 
-<!---
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz | Speicher |
-| ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: | -------: |
-| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 1.616 s | 1.095 | 1.095 | 5070.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 0.832 s | 2.127 | 1.064 | 5070.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.442 s | 4.005 | 1.001 | 5070.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.331 s | 5.347 | 0.668 | 5070.66 MB |
-| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.235 s | 7.532 | 0.471 | 5070.66 MB |
--->
+| Laptop | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
+| ------ | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
+| Laptop 1 | 1 | static | 4.003 s | 4.368 s ± 0.384 s | 0.946 | 0.946 |
+| Laptop 1 | 2 | static | 2.082 s | 2.180 s ± 0.084 s | 1.818 | 0.909 |
+| Laptop 1 | 4 | static | 1.186 s | 1.223 s ± 0.020 s | 3.191 | 0.798 |
+| Laptop 1 | 8 | static | 0.722 s | 0.784 s ± 0.032 s | 5.242 | 0.655 |
+| Laptop 1 | 16 | static | 0.698 s | 0.730 s ± 0.024 s | 5.423 | 0.339 |
+| Laptop 2 | 1 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 2 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 4 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 8 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 16 | static | xxx | xxx | xxx | xxx |
 
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
-| ------ | --------: | -----: | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
-| Gaussian | 26562 x 16681 | 3x3 | 1 | static | 2.775 s | 2.826 s ± 0.048 s | 1.010 | 1.010 |
-| Gaussian | 26562 x 16681 | 3x3 | 2 | static | 1.459 s | 1.921 s ± 0.044 s | 1.920 | 0.960 |
-| Gaussian | 26562 x 16681 | 3x3 | 4 | static | 0.845 s | 0.858 s ± 0.012 s | 3.316 | 0.829 |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.526 s | 0.589 s ± 0.066 s | 5.327 | 0.666 |
-| Gaussian | 26562 x 16681 | 3x3 | 16 | static | 0.514 s | 0.522 s ± 0.005 s | 5.451 | 0.341 |
+### OpenMP-Thread-Skalierung des Lee-Filters
+
+Der Lee-Filter wird mit einem `7×7`-Fenster und `static` Scheduling ausgeführt.
+
+| Laptop | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
+| ------ | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
+| Laptop 1 | 1 | static | 23.463 s | 25.529 s ± 1.050 s | 0.941 | 0.941 |
+| Laptop 1 | 2 | static | 12.518 s | 12.622 s ± 0.104 s | 1.764 | 0.882 |
+| Laptop 1 | 4 | static | 6.414 s | 6.569 s ± 0.178 s | 3.442 | 0.861 |
+| Laptop 1 | 8 | static | 3.549 s | 3.609 s ± 0.038 s | 6.221 | 0.778 |
+| Laptop 1 | 16 | static | 2.662 s | 2.702 s ± 0.027 s | 8.295 | 0.518 |
+| Laptop 2 | 1 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 2 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 4 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 8 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | 16 | static | xxx | xxx | xxx | xxx |
 
 ### Bildgrößenvergleich
 
-| Filter | Bildgröße | Threads | Scheduling | Laufzeit | Speicher |
-| ------ | --------: | ------: | ---------- | -------: | -------: |
-| Gaussian | 2048 x 2048 | 8 | static | offen | offen |
-| Gaussian | 4096 x 4096 | 8 | static | offen | offen |
-| Gaussian | 8192 x 8192 | 8 | static | offen | offen |
-| Gaussian | 26562 x 16681 | 8 | static | 0.625 s | 1267.66 MB |
+Für den Bildgrößenvergleich werden ein `3×3`-Gaussian-Kernel, acht Threads und `static` Scheduling verwendet.
+
+| Laptop | Bildgröße | Sequenziell (min) | OpenMP, 8 Threads (min) | Speedup | Effizienz | Speicher |
+| ------ | --------: | -----------------: | ----------------------: | ------: | --------: | -------: |
+| Laptop 1 | 2048 × 2048 | 0.041 s | 0.008 s | 5.125 | 0.641 | 48.0 MB |
+| Laptop 1 | 4096 × 4096 | 0.191 s | 0.032 s | 5.969 | 0.746 | 192.0 MB |
+| Laptop 1 | 8192 × 8192 | 0.734 s | 0.134 s | 5.478 | 0.685 | 768.0 MB |
+| Laptop 1 | 26531 × 16670 | 3.843 s | 0.744 s | 5.165 | 0.646 | 5061.4 MB |
+| Laptop 2 | 2048 × 2048 | xxx | xxx | xxx | xxx | xxx |
+| Laptop 2 | 4096 × 4096 | xxx | xxx | xxx | xxx | xxx |
+| Laptop 2 | 8192 × 8192 | xxx | xxx | xxx | xxx | xxx |
+| Laptop 2 | 26531 × 16670 | xxx | xxx | xxx | xxx | xxx |
+
+<p align="center">
+  <img src="results/Laptop1_runtime_vs_image_size.png" width="75%">
+</p>
 
 ### Scheduling-Vergleich
 
-<!---
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit | Speedup | Effizienz |
-| ------ | --------: | -----: | ------: | ---------- | -------: | ------: | --------: |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.329 s | 5.380 | 0.672 |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | 0.261 s | 6.782 | 0.848 |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | 0.299 s | 5.920 | 0.740 |
--->
-
 Für den Scheduling-Vergleich wird eine feste Bildgröße, ein fester Kernel und eine feste Thread-Anzahl (8) verwendet. Verglichen werden die OpenMP-Scheduling-Strategien `static`, `dynamic` und `guided`.
 
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
-| ------ | --------: | -----: | ------: | ---------- | --------------: | ------------------------: | ------: | --------: |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 0.526 s | 0.545 s ± 0.033 s | 5.327 | 0.666 |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | dynamic | 0.521 s | 0.533 s ± 0.010 s | 5.378 | 0.672 |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | guided | 0.516 s | 0.527 s ± 0.007 s | 5.430 | 0.679 |
-
-`guided` performt hier am besten, gefolgt von `dynamic`, dann `static` — konsistent mit einem früheren Testlauf auf derselben Maschine. Dies ist etwas überraschend, da die Zeilen des Bildes annähernd gleich teuer zu verarbeiten sind, wodurch `static` theoretisch keinen Lastungleichgewicht-Nachteil haben sollte. Eine plausible Erklärung ist, dass auf einer Laptop-CPU mit Turbo-Boost und thermischer Drosselung einzelne Kerne zeitweise langsamer laufen; `dynamic`/`guided` können sich daran anpassen, `static`s feste Vorab-Zuteilung nicht.
+| Laptop | Scheduling | Laufzeit (min) | Laufzeit (mean ± stddev) | Speedup | Effizienz |
+| ------ | ---------- | --------------: | ------------------------: | ------: | --------: |
+| Laptop 1 | static | 0.816 s | 0.924 s ± 0.057 s | 4.638 | 0.580 |
+| Laptop 1 | dynamic | 0.764 s | 0.850 s ± 0.077 s | 4.954 | 0.619 |
+| Laptop 1 | guided | 0.705 s | 0.765 s ± 0.044 s | 5.369 | 0.671 |
+| Laptop 2 | static | xxx | xxx | xxx | xxx |
+| Laptop 2 | dynamic | xxx | xxx | xxx | xxx |
+| Laptop 2 | guided | xxx | xxx | xxx | xxx |
 
 ### Kernel-Größenvergleich
 
-Für den Kernel-Größenvergleich wird eine feste Bildgröße und eine feste Thread-Anzahl (8, schedule=static) verwendet. Die Gaussian-Kernel werden aus den Binomialkoeffizienten des Pascal'schen Dreiecks erzeugt — ein Standardverfahren zur Konstruktion diskreter Gauß-Approximationen, das für 3x3 exakt den ursprünglich verwendeten Kernel reproduziert.
+Für den Kernel-Größenvergleich werden das vollständige Bild, acht Threads und `static` Scheduling verwendet.
 
-| Filter | Bildgröße | Kernel | Threads | Scheduling | Sequenziell (min) | OpenMP (min) | Speedup | Effizienz |
-| ------ | --------: | -----: | ------: | ---------- | ------------------: | ------------: | ------: | --------: |
-| Gaussian | 26562 x 16681 | 3x3 | 8 | static | 2.956 s | 0.541 s | 5.464 | 0.683 |
-| Gaussian | 26562 x 16681 | 5x5 | 8 | static | 7.657 s | 1.162 s | 6.589 | 0.824 |
-| Gaussian | 26562 x 16681 | 7x7 | 8 | static | 14.522 s | 2.186 s | 6.643 | 0.830 |
+Für jede Kernelgröße wird eine eigene sequenzielle Baseline gemessen. Dadurch wird die OpenMP-Version immer mit einer sequenziellen Version verglichen, die denselben Rechenaufwand besitzt.
 
-Die Effizienz steigt mit der Kernelgröße (0.683 → 0.824 → 0.830). Dies ist plausibel: größere Kernel bedeuten mehr Rechenaufwand pro Pixel, wodurch sich der fixe Overhead der OpenMP-Parallelisierung (Thread-Erzeugung, Scheduling) über mehr Nutzarbeit verteilt.
+| Laptop | Kernel | Sequenziell (min) | OpenMP, 8 Threads (min) | Speedup | Effizienz |
+| ------ | -----: | -----------------: | ----------------------: | ------: | --------: |
+| Laptop 1 | 3×3 | 3.721 s | 0.845 s | 4.404 | 0.550 |
+| Laptop 1 | 5×5 | 9.461 s | 1.520 s | 6.224 | 0.778 |
+| Laptop 1 | 7×7 | 18.871 s | 2.913 s | 6.478 | 0.810 |
+| Laptop 2 | 3×3 | xxx | xxx | xxx | xxx |
+| Laptop 2 | 5×5 | xxx | xxx | xxx | xxx |
+| Laptop 2 | 7×7 | xxx | xxx | xxx | xxx |
+
+<p align="center">
+  <img src="results/Laptop1_runtime_vs_kernel_size.png" width="70%">
+</p>
 
 ## Interpretation
 Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
@@ -184,8 +205,8 @@ Für die C/OpenMP-Anwendung:
 Repository klonen:
 
 ```bash
-git clone url
-cd 
+git clone <repository-url>
+cd <repository-name>
 ```
 
 ### C/OpenMP-Programm kompilieren & ausführen
@@ -195,11 +216,13 @@ gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/bench
 ./main.exe "data/sentinel_datei.tiff"
 ```
 
-Das Programm führt aktuell den sequenziellen Gaussian-Filter und die OpenMP-Version aus. Dabei werden die Ausgabebilder und Benchmark-Ergebnisse erzeugt:
+Das Programm erzeugt unter anderem:
 
 ```text
 output/gaussian_seq.tif
 output/gaussian_omp.tif
+output/lee_seq.tif
+output/lee_omp.tif
 results/benchmark_results.csv
 ```
 
@@ -209,12 +232,10 @@ results/benchmark_results.csv
 python scripts/plot_results.py
 ```
 
-Die erzeugten Plots werden im Ordner `results/` gespeichert:
+### Vergleichsbilder erzeugen
 
-```text
-results/runtime_vs_threads.png
-results/speedup_vs_threads.png
-results/efficiency_vs_threads.png
+```bash
+python scripts/outputImage.py
 ```
 
 ## Authors 
