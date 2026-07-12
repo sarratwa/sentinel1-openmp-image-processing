@@ -146,7 +146,9 @@ Für den Bildgrößenvergleich werden ein `3×3`-Gaussian-Kernel, acht Threads u
 | Laptop 2 | 26531 × 16670 | 1.263 s | 0.253 s | 4.998 | 0.625 | 5061.4 MB |
 
 <p align="center">
+  Laptop 1
   <img src="results/Laptop1_runtime_vs_image_size.png" width="75%">
+  Laptop 2
   <img src="results/Laptop2_runtime_vs_image_size.png" width="75%">
 </p>
 
@@ -179,7 +181,9 @@ Für jede Kernelgröße wird eine eigene sequenzielle Baseline gemessen. Dadurch
 | Laptop 2 | 7×7 | 6.794 s | 1.184 s | 5.738 | 0.717 |
 
 <p align="center">
+  Laptop 1
   <img src="results/Laptop1_runtime_vs_kernel_size.png" width="70%">
+  Laptop 2
   <img src="results/Laptop2_runtime_vs_kernel_size.png" width="70%">
 </p>
 
