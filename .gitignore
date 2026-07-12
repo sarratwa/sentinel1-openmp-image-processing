@@ -1,6 +1,8 @@
 *.exe
 *.out
 *.o
+.DS_Store
+.venv/
 
 # my old test file
 src/test.c
