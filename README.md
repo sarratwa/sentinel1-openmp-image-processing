@@ -148,7 +148,7 @@ Für den Bildgrößenvergleich werden ein `3×3`-Gaussian-Kernel, acht Threads u
 <table width="100%">
   <tr>
     <td width="50%"><img src="results/Laptop1_runtime_vs_image_size.png" width="100%"></td>
-    <td width="50%"<img src="results/Laptop2_runtime_vs_image_size.png" width="100%"></td>
+    <td width="50%"><img src="results/Laptop2_runtime_vs_image_size.png" width="100%"></td>
   </tr>
   <tr>
     <td>Gaussian Filter Runtime vs Image size (Laptop 1)</td>
@@ -188,7 +188,7 @@ Für jede Kernelgröße wird eine eigene sequenzielle Baseline gemessen. Dadurch
 <table width="100%">
   <tr>
     <td width="50%"><img src="results/Laptop1_runtime_vs_kernel_size.png" width="100%"></td>
-    <td width="50%"<img src="results/Laptop2_runtime_vs_kernel_size.png" width="100%"></td>
+    <td width="50%"><img src="results/Laptop2_runtime_vs_kernel_size.png" width="100%"></td>
   </tr>
   <tr>
     <td>Gaussian Filter Runtime vs Kernel size (Laptop 1)</td>
@@ -217,7 +217,7 @@ Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Le
 
 Die ursprünglichen Pixelwerte werden von GDAL in einen Float32-Arbeitspuffer übertragen und anschließend vom sequenziellen beziehungsweise parallelen Filter verarbeitet. Eine vorherige Konvertierung in das PGM-Format ist nicht mehr notwendig.
 
-Beide Laptops wurden mit derselben Sentinel-1-Eingabedatei getestet, um die Vergleichbarkeit der Ergebnisse sicherzustellen. Die verwendete Datei liegt im Ordner [`S1D_IW_GRDH_1SDV_20260712T051626_20260712T051651_003636_0067B3_BE45.SAFE`](S1D_IW_GRDH_1SDV_20260712T051626_20260712T051651_003636_0067B3_BE45.SAFE) und wurde für beide Systeme identisch verwendet.
+Beide Laptops wurden mit derselben Sentinel-1-Datei getestet, um die Vergleichbarkeit der Ergebnisse sicherzustellen. Zur Reproduzierbarkeit der Ergebnisse können die Daten im Copernicus Browser über den Identifikator (S1D_IW_GRDH_1SDV_20260712T051626_20260712T051651_003636_0067B3_BE45.SAFE) heruntergeladen werden.
 
 ### Dependencies
 
