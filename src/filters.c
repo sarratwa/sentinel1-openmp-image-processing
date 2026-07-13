@@ -5,7 +5,21 @@
 
 #include "filters.h"
 
+// https://www.geeksforgeeks.org/blogs/gaussian-filter-generation-c/
+// Gaussian Blur Filter:
 /*
+    - Kernel size: 3-5-7
+    - Generate the binomial COefficent
+    - Build the 2D Kernel
+    - slide the kernel across the image and multipls nearby pixels by kernel weights
+    - add the weighted values
+    - divide by kernel sum 
+    - store the blurred image
+ */
+
+/*
+    builds a Gaussian-like convolution kernel
+
     Computes 1D binomial (Pascal's triangle) coefficients for row n.
     Row n has n+1 coefficients: C(n,0), C(n,1), ..., C(n,n).
 */
@@ -13,8 +27,6 @@ static void binomial_row(int n, int *out) {
     out[0] = 1;
 
     for (int k = 1; k <= n; k++) {
-        /* out[k] = out[k-1] * (n - k + 1) / k, computed iteratively
-           to avoid overflow from computing full factorials. */
         out[k] = (int)((long long)out[k - 1] * (n - k + 1) / k);
     }
 }
@@ -27,6 +39,7 @@ Kernel generate_binomial_kernel(int size) {
 
     int row_degree = size - 1;
 
+    // we allocate the 1D bionomial Pascal row
     int *row = malloc((size_t)size * sizeof(int));
 
     if (!row) {
@@ -50,6 +63,7 @@ Kernel generate_binomial_kernel(int size) {
         row_sum += (float)row[i];
     }
 
+    // Building the 2D Kernel
     for (int y = 0; y < size; y++) {
         for (int x = 0; x < size; x++) {
             weights[y * size + x] = row[y] * row[x];
@@ -73,21 +87,24 @@ void free_kernel(Kernel kernel) {
 /*
     Sequential Gaussian filter, generalized to any odd kernel size.
 
-    The entire input is first copied to output (this correctly handles
-    borders of any width: border_width = kernel.size / 2). Interior
-    pixels are then overwritten with the convolved result.
+    1. The entire input is first copied to output
+    2-> Interior pixels are then overwritten with the convolved result
 */
 void gaussian_filter_sequential(Image input, Image output, Kernel kernel) {
     int width = input.width;
     int height = input.height;
+    // to know how to slide the kernel
     int radius = kernel.size / 2;
 
+    // 1
     memcpy(output.data, input.data, (size_t)width * (size_t)height * sizeof(float));
 
+    // 2 slide in the image + sum the weight
     for (int y = radius; y < height - radius; y++) {
         for (int x = radius; x < width - radius; x++) {
             float sum = 0.0f;
 
+            // move inside the kernel
             for (int ky = -radius; ky <= radius; ky++) {
                 for (int kx = -radius; kx <= radius; kx++) {
                     float pixel = input.data[(y + ky) * width + (x + kx)];

@@ -5,12 +5,16 @@
 
 #include "image_io.h"
 
+// safety helper : we need to reject invalid image dimension
 static size_t checked_pixel_count(int width, int height) {
     if (width <= 0 || height <= 0) {
         fprintf(stderr, "Error: Invalid image dimensions %d x %d.\n", width, height);
         exit(EXIT_FAILURE);
     }
 
+    // https://www.geeksforgeeks.org/c/size_t-data-type-c-language/
+    // https://en.c.perlzemi.com/blog/20210228091654.html#:~:text=SIZE_MAX%20is%20a%20constant%20macro,a%2064%2Dbit%20Linux%20environment.
+    // we need to check if the multiplication is possible & if we can allocated one float per pixel
     size_t w = (size_t)width;
     size_t h = (size_t)height;
 
@@ -35,8 +39,11 @@ Image read_tiff(const char *filename) {
         exit(EXIT_FAILURE);
     }
 
+    // https://gdal.org/en/stable/tutorials/raster_driver_tut.html
+
     GDALAllRegister();
 
+    // why readonly?
     GDALDatasetH dataset = GDALOpen(filename, GA_ReadOnly);
 
     if (!dataset) {
@@ -46,6 +53,7 @@ Image read_tiff(const char *filename) {
 
     int width = GDALGetRasterXSize(dataset);
     int height = GDALGetRasterYSize(dataset);
+    // number of image bands
     int band_count = GDALGetRasterCount(dataset);
 
     if (band_count < 1) {
@@ -54,6 +62,7 @@ Image read_tiff(const char *filename) {
         exit(EXIT_FAILURE);
     }
 
+    // vv measurement file
     GDALRasterBandH band = GDALGetRasterBand(dataset, 1);
 
     if (!band) {
@@ -113,6 +122,7 @@ Image read_tiff(const char *filename) {
     return image;
 }
 
+// now that we have the image.data we need to write it as GeoTIFF
 void write_tiff(
     const char *filename,
     Image image,
@@ -155,6 +165,8 @@ void write_tiff(
         exit(EXIT_FAILURE);
     }
 
+    // we need to connect pixel positions to geographic coordinates by reopening og TIFF 
+    // we need the geospacial info as it is a Sentinel 1 image
     if (reference_filename) {
         GDALDatasetH reference = GDALOpen(reference_filename, GA_ReadOnly);
 
@@ -217,12 +229,14 @@ void write_tiff(
     GDALClose(output);
 }
 
+// create the empty output image for the filters
 Image create_empty_image(int width, int height) {
     size_t pixel_count = checked_pixel_count(width, height);
 
     Image image;
     image.width = width;
     image.height = height;
+    // we allocate the buffer and initializes every pixel to zero (using malloc leaves the memory uninitialized -> also possible)
     image.data = calloc(pixel_count, sizeof(float));
 
     if (!image.data) {
@@ -233,6 +247,7 @@ Image create_empty_image(int width, int height) {
     return image;
 }
 
+// float point comparison for sequential and parallel implementations
 int images_are_equal(Image a, Image b) {
     if (a.width != b.width || a.height != b.height || !a.data || !b.data) {
         return 0;
@@ -249,6 +264,7 @@ int images_are_equal(Image a, Image b) {
     return 1;
 }
 
+// needed as we allocated memory by calloc  
 void free_image(Image image) {
     free(image.data);
 }
