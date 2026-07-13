@@ -232,6 +232,7 @@ Für die C/OpenMP-Anwendung:
 - GCC mit OpenMP-Unterstützung
 - GDAL
 - Unter Windows: MSYS2/UCRT64
+- Unter Linux: GCC und GDAL aus der Paketverwaltung (siehe [`README_LINUX.md`](README_LINUX.md))
 
 ### Installing
 
@@ -244,10 +245,16 @@ cd <repository-name>
 
 ### C/OpenMP-Programm kompilieren & ausführen
 
+#### Unter Windows (MSYS2/UCRT64)
+
 ```bash
 gcc -O2 -Wall -Wextra -fopenmp src/main.c src/image_io.c src/filters.c src/benchmark.c -o main.exe -lgdal -lm
 ./main.exe "data/sentinel_datei.tiff"
 ```
+
+#### Unter Linux
+
+Die vollständige Anleitung für Linux (Abhängigkeiten, Kompilieren, Ausführen) steht in [`README_LINUX.md`](README_LINUX.md).
 
 Das Programm erzeugt unter anderem:
 
