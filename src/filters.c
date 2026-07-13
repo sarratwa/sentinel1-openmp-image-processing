@@ -144,6 +144,7 @@ void gaussian_filter_openmp(Image input, Image output, Kernel kernel) {
         weight = 1 - Cu^2 / Ci^2                otherwise        (looks like real structure -> preserve it)
         output = mean + weight * (center_pixel - mean)
 */
+// the filter is a simplified Lee implementation using an assumed ENL value, not a radiometrically calibrated result
 static inline float lee_filter_pixel(
     float center_pixel,
     float mean,

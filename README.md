@@ -145,12 +145,17 @@ Für den Bildgrößenvergleich werden ein `3×3`-Gaussian-Kernel, acht Threads u
 | Laptop 2 | 8192 × 8192 | 0.219 s | 0.049 s | 4.452 | 0.556 | 768.0 MB |
 | Laptop 2 | 26531 × 16670 | 1.263 s | 0.253 s | 4.998 | 0.625 | 5061.4 MB |
 
-<p align="center">
-  
-  <img src="results/Laptop1_runtime_vs_image_size.png" width="75%">
-  
-  <img src="results/Laptop2_runtime_vs_image_size.png" width="75%">
-</p>
+<table width="100%">
+  <tr>
+    <td width="50%"><img src="results/Laptop1_runtime_vs_image_size.png" width="100%"></td>
+    <td width="50%"<img src="results/Laptop2_runtime_vs_image_size.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td>Gaussian Filter Runtime vs Image size (Laptop 1)</td>
+    <td>Gaussian Filter Runtime vs Image size  (Laptop 2)</td>
+  </tr>
+</table>
+
 
 ### Scheduling-Vergleich
 
@@ -180,15 +185,24 @@ Für jede Kernelgröße wird eine eigene sequenzielle Baseline gemessen. Dadurch
 | Laptop 2 | 5×5 | 3.560 s | 0.553 s | 6.437 | 0.805 |
 | Laptop 2 | 7×7 | 6.794 s | 1.184 s | 5.738 | 0.717 |
 
-<p align="center">
-  Laptop 1
-  <img src="results/Laptop1_runtime_vs_kernel_size.png" width="70%">
-  Laptop 2
-  <img src="results/Laptop2_runtime_vs_kernel_size.png" width="70%">
-</p>
+<table width="100%">
+  <tr>
+    <td width="50%"><img src="results/Laptop1_runtime_vs_kernel_size.png" width="100%"></td>
+    <td width="50%"<img src="results/Laptop2_runtime_vs_kernel_size.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td>Gaussian Filter Runtime vs Kernel size (Laptop 1)</td>
+    <td>Gaussian Filter Runtime vs Kernel size  (Laptop 2)</td>
+  </tr>
+</table>
 
 ## Interpretation
-Die Interpretation wird nach Durchführung der Benchmarks ergänzt.
+- Alle Korrektheitsprüfungen (Thread-Anzahl, Scheduling, Kernelgröße, Bildgröße, Lee-Filter) waren auf beiden Systemen erfolgreich: sequenzielle und OpenMP-Ergebnisse sind identisch.
+- Die Effizienz sinkt mit steigender Thread-Anzahl auf beiden Laptops, am stärksten beim Sprung auf 16 Threads
+- Beim Scheduling-Vergleich schneidet `guided` durchgehend am besten ab, gefolgt von `dynamic`, dann `static`
+- Die Effizienz steigt mit der Kernelgröße (3×3 → 5×5 → 7×7) auf beiden Laptops: größere Kernel bedeuten mehr Rechenaufwand pro Pixel, wodurch sich der feste OpenMP-Overhead besser verteilt.
+- Der Lee-Filter ist bei gleicher Fenstergröße spürbar teurer als der Gaussian-Filter (zusätzliche Varianzberechnung pro Pixel), zeigt aber ein ähnliches bzw. leicht besseres Skalierungsverhalten.
+- Speicherverbrauch ist auf beiden Systemen identisch für gleiche Bildgrößen, da er ausschließlich von der Datenmenge abhängt, nicht von der Hardware.
 
 ## Getting Started
 
@@ -202,6 +216,8 @@ Die Schritte zum Herunterladen und Vorbereiten der Sentinel-1-Daten sind in der 
 Für die aktuelle Benchmark-Version wird die VV-Polarisation eines Sentinel-1-Level-1-GRD-Produkts verwendet. Die TIFF-Messdatei wird direkt mit GDAL im C-Programm eingelesen.
 
 Die ursprünglichen Pixelwerte werden von GDAL in einen Float32-Arbeitspuffer übertragen und anschließend vom sequenziellen beziehungsweise parallelen Filter verarbeitet. Eine vorherige Konvertierung in das PGM-Format ist nicht mehr notwendig.
+
+Beide Laptops wurden mit derselben Sentinel-1-Eingabedatei getestet, um die Vergleichbarkeit der Ergebnisse sicherzustellen. Die verwendete Datei liegt im Ordner [`S1D_IW_GRDH_1SDV_20260712T051626_20260712T051651_003636_0067B3_BE45.SAFE`](S1D_IW_GRDH_1SDV_20260712T051626_20260712T051651_003636_0067B3_BE45.SAFE) und wurde für beide Systeme identisch verwendet.
 
 ### Dependencies
 
