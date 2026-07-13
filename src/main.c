@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    // starting with gaussian
+
     const char *input_path = argv[1];
     const char *output_seq_path = "output/gaussian_seq.tif";
     const char *output_omp_path = "output/gaussian_omp.tif";
@@ -76,6 +78,7 @@ int main(int argc, char **argv) {
     );
     double seq_runtime = seq_timing.min;
 
+    // baseline
     printf("\nSequential Gaussian filter finished.\n");
     printf("Sequential runtime: min=%.6f s, mean=%.6f s, stddev=%.6f s (n=%d)\n",
            seq_timing.min, seq_timing.mean, seq_timing.stddev, REPETITIONS);
@@ -177,6 +180,7 @@ int main(int argc, char **argv) {
             input, 3, schedule_comparison_threads, schedule_names[i], t, speedup, efficiency
         );
 
+        // output sanity check
         if (!images_are_equal(output_seq, output_omp)) {
             all_schedules_correct = 0;
             fprintf(stderr,
